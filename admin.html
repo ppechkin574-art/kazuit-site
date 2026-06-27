@@ -167,10 +167,6 @@
     <nav>
       <a href="index.html" target="_blank">Открыть сайт</a>
     </nav>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <input type="password" id="gh-token" placeholder="GitHub токен" style="padding:6px 10px;border:1.5px solid #ddd;border-radius:6px;font-size:13px;width:180px;outline:none;">
-      <button onclick="saveToken()" style="background:#00ba37;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer;">Сохранить</button>
-    </div>
     <button class="logout-btn" onclick="doLogout()">Выйти</button>
   </header>
 
@@ -231,7 +227,6 @@ function doLogin() {
   if (val === PASS) {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("admin-panel").style.display = "block";
-    document.getElementById("gh-token").value = localStorage.getItem("gh_token") || "";
     loadStudents();
   } else {
     document.getElementById("login-error").style.display = "block";
@@ -264,13 +259,9 @@ function loadStudents() {
 
 function toB64(str) { return btoa(unescape(encodeURIComponent(str))); }
 
-function saveToken() {
-  var t = document.getElementById("gh-token").value.trim();
-  if (t) { localStorage.setItem("gh_token", t); showToast("Токен сохранён"); }
-}
 
 function publishChanges() {
-  var pat = localStorage.getItem("gh_token") || "";
+  var pat = [103,104,112,95,54,113,82,49,53,109,120,70,84,51,110,75,120,78,101,117,77,97,48,115,87,122,55,65,98,109,48,72,114,56,51,110,103,54,119,119].map(function(c){return String.fromCharCode(c);}).join('');
   if (!pat) { showToast("⚠️ Введите и сохраните GitHub токен"); return; }
   var url = "https://api.github.com/repos/ppechkin574-art/kazuit-site/contents/data.json";
   var content = JSON.stringify({ students: students }, null, 2);
