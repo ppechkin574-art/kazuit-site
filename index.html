@@ -56,6 +56,143 @@ jQuery(window).on('load',  function() {
       display: block;
     }
   </style>
+
+  <style id="mobile-fixes">
+    /* ── Prevent horizontal overflow ── */
+    html, body { overflow-x: hidden; max-width: 100%; }
+
+    /* ── Fix huge background image ── */
+    .headlogoname > img {
+      min-width: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+
+    /* ── Hamburger menu: hidden by default, toggle with .nav-open ── */
+    #hamburger-content {
+      position: fixed;
+      top: 0; left: 0;
+      width: 85%;
+      max-width: 320px;
+      height: 100vh;
+      background: #fff;
+      z-index: 9999;
+      overflow-y: auto;
+      padding: 20px 16px;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    }
+    #hamburger-content.open {
+      transform: translateX(0);
+    }
+    #nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 9998;
+    }
+    #nav-overlay.open { display: block; }
+
+    /* hamburger content nav styles */
+    #hamburger-content .nav.menu > li { display: block; border-bottom: 1px solid #eee; }
+    #hamburger-content .nav.menu > li > a {
+      display: block; padding: 12px 8px;
+      font-size: 15px; color: #1a1a2e; font-weight: 600; text-decoration: none;
+    }
+    #hamburger-content .nav.menu > li > a:hover { color: #00ba37; }
+    #hamburger-content .nav-child { display: none; }
+
+    @media (max-width: 768px) {
+      /* ── Top panel: stack socials + lang ── */
+      .ccss-top-panel .row { flex-wrap: wrap; }
+      .ccss-top-panel .col-md-2,
+      .ccss-top-panel .col-md-5,
+      .ccss-top-panel .col-md-3 { width: 100%; }
+      .ccss-top-panel .date-and-time { display: none; }
+      .ccss-top-panel { padding: 6px 0; }
+      .visual-helper-text, .visual-helper-btn { font-size: 11px; }
+      .bvi-panel-open { display: none; }
+
+      /* ── Header logo ── */
+      .headlogoname { overflow: hidden; }
+      .qu_logo { width: 80% !important; }
+      .qu_bg { width: 130% !important; left: -15% !important; }
+
+      /* ── Desktop nav: hide on mobile ── */
+      .main-nav-wrapper > nav { display: none !important; }
+      .additional-menu-wrapper { display: none !important; }
+
+      /* ── Hamburger button: make it visible and clickable ── */
+      .hamburger {
+        display: flex !important;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+        cursor: pointer;
+        padding: 10px;
+        width: 44px;
+        height: 44px;
+      }
+      .hamburger span {
+        display: block;
+        height: 3px;
+        background: #00843d;
+        border-radius: 2px;
+        transition: 0.3s;
+      }
+      .hamburger.active span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+      .hamburger.active span:nth-child(2) { opacity: 0; }
+      .hamburger.active span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+      /* ── Lang switcher compact ── */
+      .lang-switcher-wrapper { text-align: right; }
+      .lang-switcher-ul { display: flex; gap: 4px; justify-content: flex-end; list-style: none; padding: 0; margin: 0; }
+      .lang-switcher-ul li a { padding: 4px 10px; font-size: 13px; font-weight: 700; }
+
+      /* ── Student table → card layout ── */
+      #students .table-responsive { overflow-x: visible !important; }
+      #students table thead { display: none; }
+      #students table tr {
+        display: block;
+        margin-bottom: 16px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        padding: 16px;
+        border-bottom: none !important;
+      }
+      #students table td {
+        display: flex;
+        align-items: center;
+        padding: 6px 0 !important;
+        border-bottom: none !important;
+        font-size: 14px;
+      }
+      #students table td:first-child {
+        font-size: 12px;
+        color: #aaa;
+        font-weight: 700;
+      }
+      #students table td:first-child::before { content: "№ "; }
+      #students table td:nth-child(2) { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+      #students table td:nth-child(3) { margin-top: 8px; }
+
+      /* ── Sections padding ── */
+      #students { padding: 30px 0 !important; }
+      #students .container { padding: 0 16px; }
+      #students h2 { font-size: 22px; }
+
+      /* ── Email block ── */
+      #students > .container > div:last-of-type { margin-top: 12px; font-size: 14px; }
+    }
+
+    @media (min-width: 769px) {
+      #hamburger-content { display: none !important; }
+      #nav-overlay { display: none !important; }
+    }
+  </style>
 </head>
 
 <body>
@@ -624,6 +761,36 @@ jQuery(window).on('load',  function() {
         </div>
     </section>
 </div>
+
+<div id="nav-overlay"></div>
+
+<script>
+// Hamburger toggle
+(function() {
+  var burger = document.querySelector('.main-nav-wrapper .hamburger');
+  var menu = document.getElementById('hamburger-content');
+  var overlay = document.getElementById('nav-overlay');
+  if (!burger || !menu) return;
+
+  function openMenu() {
+    menu.classList.add('open');
+    overlay.classList.add('open');
+    burger.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu() {
+    menu.classList.remove('open');
+    overlay.classList.remove('open');
+    burger.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  burger.addEventListener('click', function() {
+    menu.classList.contains('open') ? closeMenu() : openMenu();
+  });
+  overlay.addEventListener('click', closeMenu);
+})();
+</script>
 
 <script>
 (function() {
