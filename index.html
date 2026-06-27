@@ -800,7 +800,7 @@ jQuery(window).on('load',  function() {
         }).join('');
     }
 
-    fetch('/data.json', { cache: 'no-store' })
+    fetch('/data.json')
         .then(function(r) { return r.json(); })
         .then(function(d) { renderStudents(d.students || DEFAULT_STUDENTS); })
         .catch(function() { renderStudents(DEFAULT_STUDENTS); });
@@ -1129,7 +1129,7 @@ jQuery(window).on('load',  function() {
   });
 
   // Load from server
-  fetch('/data.json', { cache: 'no-store' })
+  fetch('/data.json')
     .then(function(r) { return r.json(); })
     .then(function(d) { _mobileStudents = d.students || _mobileStudents; renderHero(); })
     .catch(function() { renderHero(); });
