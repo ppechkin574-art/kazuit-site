@@ -167,12 +167,18 @@
     <nav>
       <a href="index.html" target="_blank">Открыть сайт</a>
     </nav>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <input type="password" id="gh-token" placeholder="GitHub токен" style="padding:6px 10px;border:1.5px solid #ddd;border-radius:6px;font-size:13px;width:180px;outline:none;">
+      <button onclick="saveToken()" style="background:#00ba37;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:13px;cursor:pointer;">Сохранить</button>
+    </div>
     <button class="logout-btn" onclick="doLogout()">Выйти</button>
   </header>
 
   <main>
     <div class="page-title">Студенты</div>
     <div class="page-sub">Управление списком студентов, отображаемых на публичной странице</div>
+
+    <button onclick="publishChanges()" style="background:#1a1a2e;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:20px;">🚀 Опубликовать изменения</button>
 
     <div class="card">
       <div class="card-header">
@@ -225,7 +231,8 @@ function doLogin() {
   if (val === PASS) {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("admin-panel").style.display = "block";
-    renderTable();
+    document.getElementById("gh-token").value = localStorage.getItem("gh_token") || "";
+    loadStudents();
   } else {
     document.getElementById("login-error").style.display = "block";
   }
@@ -241,25 +248,45 @@ function doLogout() {
   document.getElementById("pwd-input").value = "";
 }
 
-// Storage
-var DEFAULT_STUDENTS = [{ id: 1, name: "Гасанли Айхан Насими оглу" }];
+// Storage — in-memory, synced to GitHub via API
+var students = [{ id: 1, name: "Гасанли Айхан Насими оглу" }];
 
-function getStudents() {
-  try {
-    var s = localStorage.getItem("kazuit_students");
-    if (s !== null) return JSON.parse(s);
-  } catch(e) {}
-  // First visit — seed localStorage with defaults
-  localStorage.setItem("kazuit_students", JSON.stringify(DEFAULT_STUDENTS));
-  return DEFAULT_STUDENTS;
+function getStudents() { return students; }
+
+function setStudents(list) { students = list; }
+
+function loadStudents() {
+  fetch("/data.json", { cache: "no-store" })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { students = d.students || students; renderTable(); })
+    .catch(function() { renderTable(); });
 }
 
-function setStudents(list) {
-  try {
-    localStorage.setItem("kazuit_students", JSON.stringify(list));
-  } catch(e) {
-    showToast("⚠️ Ошибка сохранения");
-  }
+function toB64(str) { return btoa(unescape(encodeURIComponent(str))); }
+
+function saveToken() {
+  var t = document.getElementById("gh-token").value.trim();
+  if (t) { localStorage.setItem("gh_token", t); showToast("Токен сохранён"); }
+}
+
+function publishChanges() {
+  var pat = localStorage.getItem("gh_token") || "";
+  if (!pat) { showToast("⚠️ Введите и сохраните GitHub токен"); return; }
+  var url = "https://api.github.com/repos/ppechkin574-art/kazuit-site/contents/data.json";
+  var content = JSON.stringify({ students: students }, null, 2);
+  showToast("⏳ Публикация...");
+  fetch(url, { headers: { "Authorization": "token " + pat, "Accept": "application/vnd.github.v3+json" } })
+    .then(function(r) { if (!r.ok) throw new Error("GET failed: " + r.status); return r.json(); })
+    .then(function(f) {
+      return fetch(url, {
+        method: "PUT",
+        headers: { "Authorization": "token " + pat, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json" },
+        body: JSON.stringify({ message: "Update students via admin", content: toB64(content), sha: f.sha })
+      });
+    })
+    .then(function(r) { if (!r.ok) return r.json().then(function(e) { throw new Error(e.message); }); return r; })
+    .then(function() { showToast("✅ Опубликовано (~1-2 мин до обновления)"); })
+    .catch(function(e) { showToast("⚠️ Ошибка: " + e.message); });
 }
 
 // Render

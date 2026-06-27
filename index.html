@@ -770,32 +770,23 @@ jQuery(window).on('load',  function() {
 
 <script>
 (function() {
-    var DEFAULT_STUDENTS = [
-        { id: 1, name: "Гасанли Айхан Насими оглу" }
-    ];
-
-    function getStudents() {
-        try {
-            var saved = localStorage.getItem("kazuit_students");
-            if (saved !== null) return JSON.parse(saved);
-        } catch(e) {}
-        return DEFAULT_STUDENTS;
-    }
+    var DEFAULT_STUDENTS = [{ id: 1, name: 'Гасанли Айхан Насими оглу' }];
+    var cachedStudents = DEFAULT_STUDENTS;
 
     function escHtml(str) {
         return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    function renderStudents() {
-        var tbody = document.getElementById("students-tbody");
+    function renderStudents(students) {
+        cachedStudents = students;
+        var tbody = document.getElementById('students-tbody');
         if (!tbody) return;
-        var students = getStudents();
-        var lang = "ru";
-        try { lang = localStorage.getItem("kazuit_lang") || "ru"; } catch(e) {}
+        var lang = 'ru';
+        try { lang = localStorage.getItem('kazuit_lang') || 'ru'; } catch(e) {}
         var badges = {
-            ru: "✅ Является студентом КАЗУИТС",
-            kz: "✅ ҚУИТС студенті",
-            en: "✅ Enrolled at KAZUITS"
+            ru: '✅ Является студентом КАЗУИТС',
+            kz: '✅ ҚУИТС студенті',
+            en: '✅ Enrolled at KAZUITS'
         };
         var badge = badges[lang] || badges.ru;
         tbody.innerHTML = students.map(function(s, i) {
@@ -809,10 +800,14 @@ jQuery(window).on('load',  function() {
         }).join('');
     }
 
-    renderStudents();
+    fetch('/data.json', { cache: 'no-store' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) { renderStudents(d.students || DEFAULT_STUDENTS); })
+        .catch(function() { renderStudents(DEFAULT_STUDENTS); });
 
-    window.addEventListener("storage", function(e) {
-        if (e.key === "kazuit_students" || e.key === "kazuit_lang") renderStudents();
+    // Re-render with cached students when language changes
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'kazuit_lang') renderStudents(cachedStudents);
     });
 })();
 </script>
@@ -1041,13 +1036,9 @@ jQuery(window).on('load',  function() {
 
   function t(key) { return (TRANSLATIONS[currentLang] || TRANSLATIONS.ru)[key] || key; }
 
-  function getStudents() {
-    try {
-      var s = localStorage.getItem('kazuit_students');
-      if (s !== null) return JSON.parse(s);
-    } catch(e) {}
-    return [{ id: 1, name: 'Гасанли Айхан Насими оглу' }];
-  }
+  var _mobileStudents = [{ id: 1, name: 'Гасанли Айхан Насими оглу' }];
+
+  function getStudents() { return _mobileStudents; }
 
   function renderHero() {
     var students = getStudents();
@@ -1131,14 +1122,17 @@ jQuery(window).on('load',  function() {
 
   // Re-render on storage changes (admin updates)
   window.addEventListener('storage', function(e) {
-    if (e.key === 'kazuit_students' || e.key === 'kazuit_lang') {
-      if (e.key === 'kazuit_lang' && e.newValue) currentLang = e.newValue;
+    if (e.key === 'kazuit_lang') {
+      if (e.newValue) currentLang = e.newValue;
       renderHero();
     }
   });
 
-  // Initial render
-  renderHero();
+  // Load from server
+  fetch('/data.json', { cache: 'no-store' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { _mobileStudents = d.students || _mobileStudents; renderHero(); })
+    .catch(function() { renderHero(); });
 })();
 </script>
 </body>
