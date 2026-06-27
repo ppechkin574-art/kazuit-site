@@ -485,18 +485,10 @@ jQuery(window).on('load',  function() {
                         <tr style="background: #00ba37; color: #fff;">
                             <th style="padding: 15px 20px; font-weight: 600; font-size: 16px; border: none;" data-i18n="th_num">№</th>
                             <th style="padding: 15px 20px; font-weight: 600; font-size: 16px; border: none;" data-i18n="th_name">ФИО студента</th>
-                            <th style="padding: 15px 20px; font-weight: 600; font-size: 16px; border: none;" data-i18n="th_files">Файлы</th>
+                            <th style="padding: 15px 20px; font-weight: 600; font-size: 16px; border: none;" data-i18n="th_status">Статус</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td style="padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #eee;">1</td>
-                            <td style="padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #eee; font-weight: 500;">Гасанли Айхан Насими оглу</td>
-                            <td style="padding: 15px 20px; vertical-align: middle; border-bottom: 1px solid #eee;">
-                                <a href="https://kazuit.kz/pdf/c40871e5" target="_blank" style="display:inline-block; margin: 3px; padding: 5px 12px; background:#dc3545; color:#fff; border-radius:20px; text-decoration:none; font-size:13px;" data-i18n="pdf_btn">📄 Справка с места обучения</a>
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody id="students-tbody"></tbody>
                 </table>
             </div>
 
@@ -511,8 +503,8 @@ jQuery(window).on('load',  function() {
                         students_title: "Наши студенты",
                         th_num: "№",
                         th_name: "ФИО студента",
-                        th_files: "Файлы",
-                        pdf_btn: "📄 Справка с места обучения",
+                        th_status: "Статус",
+                        status_badge: "✅ Является студентом КАЗУИТС",
                         email_label: "Email:",
                         bvi: "Версия для слабовидящих",
                         nav_students: "Наши студенты",
@@ -530,8 +522,8 @@ jQuery(window).on('load',  function() {
                         students_title: "Біздің студенттер",
                         th_num: "№",
                         th_name: "Студенттің аты-жөні",
-                        th_files: "Файлдар",
-                        pdf_btn: "📄 Оқу орнынан анықтама",
+                        th_status: "Статус",
+                        status_badge: "✅ ҚУИTС студенті",
                         email_label: "Email:",
                         bvi: "Көру қабілеті нашар адамдарға арналған нұсқа",
                         nav_students: "Біздің студенттер",
@@ -549,8 +541,8 @@ jQuery(window).on('load',  function() {
                         students_title: "Our students",
                         th_num: "№",
                         th_name: "Student name",
-                        th_files: "Files",
-                        pdf_btn: "📄 Certificate of enrollment",
+                        th_status: "Статус",
+                        status_badge: "✅ Enrolled at KAZUITS",
                         email_label: "Email:",
                         bvi: "Version for visually impaired",
                         nav_students: "Our students",
@@ -632,6 +624,55 @@ jQuery(window).on('load',  function() {
         </div>
     </section>
 </div>
+
+<script>
+(function() {
+    var DEFAULT_STUDENTS = [
+        { id: 1, name: "Гасанли Айхан Насими оглу" }
+    ];
+
+    function getStudents() {
+        try {
+            var saved = localStorage.getItem("kazuit_students");
+            if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return DEFAULT_STUDENTS;
+    }
+
+    function renderStudents() {
+        var tbody = document.getElementById("students-tbody");
+        if (!tbody) return;
+        var students = getStudents();
+        var lang = "ru";
+        try { lang = localStorage.getItem("kazuit_lang") || "ru"; } catch(e) {}
+        var badges = {
+            ru: "✅ Является студентом КАЗУИТС",
+            kz: "✅ ҚУИТС студенті",
+            en: "✅ Enrolled at KAZUITS"
+        };
+        var badge = badges[lang] || badges.ru;
+        tbody.innerHTML = students.map(function(s, i) {
+            return '<tr>' +
+                '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;">' + (i+1) + '</td>' +
+                '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;font-weight:500;">' + s.name + '</td>' +
+                '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;">' +
+                    '<span style="display:inline-block;padding:6px 16px;background:#e8f7ee;color:#00843d;border:1.5px solid #00ba37;border-radius:20px;font-size:13px;font-weight:600;" data-status-badge>' + badge + '</span>' +
+                '</td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    renderStudents();
+
+    window.addEventListener("kazuit_students_updated", renderStudents);
+    window.addEventListener("storage", function(e) {
+        if (e.key === "kazuit_students" || e.key === "kazuit_lang") renderStudents();
+    });
+
+    var origApplyLang = window.__kazuit_applyLang;
+    document.addEventListener("kazuit_lang_changed", renderStudents);
+})();
+</script>
 
 </body>
 
