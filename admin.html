@@ -255,7 +255,11 @@ function getStudents() {
 }
 
 function setStudents(list) {
-  localStorage.setItem("kazuit_students", JSON.stringify(list));
+  try {
+    localStorage.setItem("kazuit_students", JSON.stringify(list));
+  } catch(e) {
+    showToast("⚠️ Ошибка сохранения");
+  }
 }
 
 // Render
