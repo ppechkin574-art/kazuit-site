@@ -777,9 +777,13 @@ jQuery(window).on('load',  function() {
     function getStudents() {
         try {
             var saved = localStorage.getItem("kazuit_students");
-            if (saved) return JSON.parse(saved);
+            if (saved !== null) return JSON.parse(saved);
         } catch(e) {}
         return DEFAULT_STUDENTS;
+    }
+
+    function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     function renderStudents() {
@@ -797,7 +801,7 @@ jQuery(window).on('load',  function() {
         tbody.innerHTML = students.map(function(s, i) {
             return '<tr>' +
                 '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;">' + (i+1) + '</td>' +
-                '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;font-weight:500;">' + s.name + '</td>' +
+                '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;font-weight:500;">' + escHtml(s.name) + '</td>' +
                 '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;">' +
                     '<span style="display:inline-block;padding:6px 16px;background:#e8f7ee;color:#00843d;border:1.5px solid #00ba37;border-radius:20px;font-size:13px;font-weight:600;" data-i18n="status_badge">' + badge + '</span>' +
                 '</td>' +
