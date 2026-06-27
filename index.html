@@ -656,7 +656,7 @@ jQuery(window).on('load',  function() {
                 '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;">' + (i+1) + '</td>' +
                 '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;font-weight:500;">' + s.name + '</td>' +
                 '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;">' +
-                    '<span style="display:inline-block;padding:6px 16px;background:#e8f7ee;color:#00843d;border:1.5px solid #00ba37;border-radius:20px;font-size:13px;font-weight:600;" data-status-badge>' + badge + '</span>' +
+                    '<span style="display:inline-block;padding:6px 16px;background:#e8f7ee;color:#00843d;border:1.5px solid #00ba37;border-radius:20px;font-size:13px;font-weight:600;" data-i18n="status_badge">' + badge + '</span>' +
                 '</td>' +
             '</tr>';
         }).join('');
@@ -664,13 +664,9 @@ jQuery(window).on('load',  function() {
 
     renderStudents();
 
-    window.addEventListener("kazuit_students_updated", renderStudents);
     window.addEventListener("storage", function(e) {
         if (e.key === "kazuit_students" || e.key === "kazuit_lang") renderStudents();
     });
-
-    var origApplyLang = window.__kazuit_applyLang;
-    document.addEventListener("kazuit_lang_changed", renderStudents);
 })();
 </script>
 

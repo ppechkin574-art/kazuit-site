@@ -242,12 +242,16 @@ function doLogout() {
 }
 
 // Storage
+var DEFAULT_STUDENTS = [{ id: 1, name: "Гасанли Айхан Насими оглу" }];
+
 function getStudents() {
   try {
     var s = localStorage.getItem("kazuit_students");
-    if (s) return JSON.parse(s);
+    if (s !== null) return JSON.parse(s);
   } catch(e) {}
-  return [{ id: 1, name: "Гасанли Айхан Насими оглу" }];
+  // First visit — seed localStorage with defaults
+  localStorage.setItem("kazuit_students", JSON.stringify(DEFAULT_STUDENTS));
+  return DEFAULT_STUDENTS;
 }
 
 function setStudents(list) {
