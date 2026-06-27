@@ -58,144 +58,120 @@ jQuery(window).on('load',  function() {
   </style>
 
   <style id="mobile-fixes">
-    /* ── Prevent horizontal overflow ── */
     html, body { overflow-x: hidden; max-width: 100%; }
+    .headlogoname > img { min-width: 0 !important; max-width: 100% !important; width: 100% !important; }
 
-    /* ── Fix huge background image ── */
-    .headlogoname > img {
-      min-width: 0 !important;
-      max-width: 100% !important;
-      width: 100% !important;
-    }
-
-    /* ── Hamburger menu: hidden by default, toggle with .nav-open ── */
-    #hamburger-content {
-      position: fixed;
-      top: 0; left: 0;
-      width: 85%;
-      max-width: 320px;
-      height: 100vh;
-      background: #fff;
-      z-index: 9999;
-      overflow-y: auto;
-      padding: 20px 16px;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-      box-shadow: 4px 0 20px rgba(0,0,0,0.15);
-    }
-    #hamburger-content.open {
-      transform: translateX(0);
-    }
-    #nav-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      z-index: 9998;
-    }
-    #nav-overlay.open { display: block; }
-
-    /* hamburger content nav styles */
-    #hamburger-content .nav.menu > li { display: block; border-bottom: 1px solid #eee; }
-    #hamburger-content .nav.menu > li > a {
-      display: block; padding: 12px 8px;
-      font-size: 15px; color: #1a1a2e; font-weight: 600; text-decoration: none;
-    }
-    #hamburger-content .nav.menu > li > a:hover { color: #00ba37; }
-    #hamburger-content .nav-child { display: none; }
+    /* Mobile UI layer — hidden on desktop */
+    #mobile-ui { display: none; }
 
     @media (max-width: 768px) {
-      /* ── Top panel: stack socials + lang ── */
-      .ccss-top-panel .row { flex-wrap: wrap; }
-      .ccss-top-panel .col-md-2,
-      .ccss-top-panel .col-md-5,
-      .ccss-top-panel .col-md-3 { width: 100%; }
-      .ccss-top-panel .date-and-time { display: none; }
-      .ccss-top-panel { padding: 6px 0; }
-      .visual-helper-text, .visual-helper-btn { font-size: 11px; }
-      .bvi-panel-open { display: none; }
-
-      /* ── Header logo ── */
-      .headlogoname { overflow: hidden; }
-      .qu_logo { width: 80% !important; }
-      .qu_bg { width: 130% !important; left: -15% !important; }
-
-      /* ── Desktop nav: hide on mobile ── */
-      .main-nav-wrapper > nav { display: none !important; }
-      .additional-menu-wrapper { display: none !important; }
-
-      /* ── Hamburger button: make it visible and clickable ── */
-      .hamburger {
-        display: flex !important;
-        flex-direction: column;
-        justify-content: center;
-        gap: 5px;
-        cursor: pointer;
-        padding: 10px;
-        width: 44px;
-        height: 44px;
-      }
-      .hamburger span {
-        display: block;
-        height: 3px;
-        background: #00843d;
-        border-radius: 2px;
-        transition: 0.3s;
-      }
-      .hamburger.active span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
-      .hamburger.active span:nth-child(2) { opacity: 0; }
-      .hamburger.active span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
-
-      /* ── Lang switcher compact ── */
-      .lang-switcher-wrapper { text-align: right; }
-      .lang-switcher-ul { display: flex; gap: 4px; justify-content: flex-end; list-style: none; padding: 0; margin: 0; }
-      .lang-switcher-ul li a { padding: 4px 10px; font-size: 13px; font-weight: 700; }
-
-      /* ── Student table → card layout ── */
-      #students .table-responsive { overflow-x: visible !important; }
-      #students table thead { display: none; }
-      #students table tr {
-        display: block;
-        margin-bottom: 16px;
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-        padding: 16px;
-        border-bottom: none !important;
-      }
-      #students table td {
-        display: flex;
-        align-items: center;
-        padding: 6px 0 !important;
-        border-bottom: none !important;
-        font-size: 14px;
-      }
-      #students table td:first-child {
-        font-size: 12px;
-        color: #aaa;
-        font-weight: 700;
-      }
-      #students table td:first-child::before { content: "№ "; }
-      #students table td:nth-child(2) { font-size: 16px; font-weight: 700; color: #1a1a2e; }
-      #students table td:nth-child(3) { margin-top: 8px; }
-
-      /* ── Sections padding ── */
-      #students { padding: 30px 0 !important; }
-      #students .container { padding: 0 16px; }
-      #students h2 { font-size: 22px; }
-
-      /* ── Email block ── */
-      #students > .container > div:last-of-type { margin-top: 12px; font-size: 14px; }
-    }
-
-    @media (min-width: 769px) {
+      /* Hide entire desktop site */
+      .body-wrapper { display: none !important; }
       #hamburger-content { display: none !important; }
+
+      /* Show mobile UI */
+      #mobile-ui { display: flex; flex-direction: column; min-height: 100vh; background: #f4f6f9; }
+    }
+    @media (min-width: 769px) {
+      #mobile-ui { display: none !important; }
       #nav-overlay { display: none !important; }
     }
   </style>
 </head>
 
 <body>
+
+<!-- ═══════════════ MOBILE UI (≤768px only) ═══════════════ -->
+<div id="mobile-ui">
+
+  <!-- Sticky header -->
+  <header id="m-header">
+    <button id="m-burger" aria-label="Меню">
+      <span></span><span></span><span></span>
+    </button>
+    <div id="m-logo">
+      <div id="m-logo-icon">🎓</div>
+      <div id="m-logo-text">
+        <strong>QAZIITU</strong>
+        <span>University</span>
+      </div>
+    </div>
+    <div id="m-lang">
+      <button class="m-lang-btn" data-lang="kz">KAZ</button>
+      <button class="m-lang-btn active" data-lang="ru">RUS</button>
+      <button class="m-lang-btn" data-lang="en">ENG</button>
+    </div>
+  </header>
+
+  <!-- Slide-in drawer -->
+  <div id="m-drawer">
+    <div id="m-drawer-head">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">🎓</div>
+        <div style="color:#fff;font-size:13px;font-weight:700;">QAZIITU University</div>
+      </div>
+      <button id="m-drawer-close">✕</button>
+    </div>
+    <nav id="m-drawer-nav">
+      <a href="https://kazuits.edu.kz/ru/" class="m-nav-link">🏛️ Наши студенты</a>
+      <a href="https://kazuits.edu.kz/ru/o-vuze" class="m-nav-link">ℹ️ О ВУЗЕ</a>
+      <a href="https://kazuits.edu.kz/ru/obuchenie" class="m-nav-link">📚 Обучение</a>
+      <a href="https://kazuits.edu.kz/ru/kafedry" class="m-nav-link">🎓 Кафедры</a>
+      <a href="https://kazuits.edu.kz/ru/1266" class="m-nav-link">📋 Абитуриентам</a>
+      <a href="https://kazuits.edu.kz/ru/025896" class="m-nav-link">🎉 Студенческая жизнь</a>
+      <a href="https://kazuits.edu.kz/ru/novosti-i-sobytiya" class="m-nav-link">📰 Новости</a>
+      <a href="https://kazuits.edu.kz/ru/nauchnaya-deyatelnost" class="m-nav-link">🔬 Наука</a>
+      <a href="https://t.me/QAZIITU_AssistantBot" class="m-nav-link">🤖 AI ассистент</a>
+      <a href="https://kaziitu.nnsoft.kz/intranet" class="m-nav-link">🔐 intranet</a>
+    </nav>
+  </div>
+  <div id="m-overlay"></div>
+
+  <!-- Scroll content -->
+  <main id="m-main">
+    <!-- Hero card rendered by JS -->
+    <div id="m-hero"></div>
+
+    <!-- Contacts -->
+    <section id="m-contacts">
+      <h2 class="m-section-title" data-mi18n="contacts_title">Контакты</h2>
+      <a href="mailto:student@kazuit.kz" class="m-contact-card">
+        <div class="m-contact-icon" style="background:#e8f7ee;">✉️</div>
+        <div class="m-contact-info">
+          <div class="m-contact-label" data-mi18n="email_label">Email университета</div>
+          <div class="m-contact-val">student@kazuit.kz</div>
+        </div>
+        <div class="m-contact-arrow">›</div>
+      </a>
+      <a href="https://kazuits.edu.kz/ru" target="_blank" class="m-contact-card">
+        <div class="m-contact-icon" style="background:#e8f0ff;">🌐</div>
+        <div class="m-contact-info">
+          <div class="m-contact-label" data-mi18n="site_label">Официальный сайт</div>
+          <div class="m-contact-val">kazuits.edu.kz</div>
+        </div>
+        <div class="m-contact-arrow">›</div>
+      </a>
+    </section>
+
+    <!-- Footer -->
+    <footer id="m-footer">
+      <div id="m-socials">
+        <a href="https://vk.com/kziitu" class="m-social-btn" style="background:#4a76a8;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M15.07 2H8.93C3.33 2 2 3.33 2 8.93v6.14C2 20.67 3.33 22 8.93 22h6.14C20.67 22 22 20.67 22 15.07V8.93C22 3.33 20.67 2 15.07 2zm3.08 13.37h-1.65c-.62 0-.82-.5-1.93-1.62-1-.95-1.43-.95-1.67-.95-.33 0-.42.1-.42.56v1.48c0 .4-.13.64-1.17.64-1.73 0-3.64-1.05-4.98-2.98-2.02-2.82-2.57-4.92-2.57-5.36 0-.24.1-.46.56-.46h1.65c.42 0 .58.19.74.63.82 2.34 2.18 4.4 2.75 4.4.21 0 .31-.1.31-.63V9.71c-.07-1.13-.66-1.23-.66-1.63 0-.19.16-.38.42-.38h2.59c.35 0 .48.19.48.61v3.24c0 .35.16.48.26.48.21 0 .38-.13.77-.52 1.18-1.33 2.03-3.37 2.03-3.37.11-.24.31-.46.73-.46h1.65c.5 0 .6.26.5.61-.21.98-2.22 3.8-2.22 3.8-.18.29-.24.42 0 .74.17.24.73.73 1.1 1.18.69.79 1.21 1.44 1.35 1.9.14.45-.09.68-.55.68z"/></svg>
+        </a>
+        <a href="https://www.instagram.com/qaziitu_life/" class="m-social-btn" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>
+        <a href="https://www.youtube.com/@qaziitu" class="m-social-btn" style="background:#ff0000;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="white"><path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+        </a>
+      </div>
+      <p id="m-footer-copy">© 2025 QAZIITU University</p>
+    </footer>
+  </main>
+</div>
+<!-- ═══════════════ END MOBILE UI ═══════════════ -->
+
     <!-- <div class="off-canvas-wrapper">
     
   </div> -->
@@ -837,6 +813,330 @@ jQuery(window).on('load',  function() {
 })();
 </script>
 
+
+<style id="m-styles">
+/* ════ MOBILE HEADER ════ */
+#m-header {
+  position: sticky; top: 0; z-index: 1000;
+  background: linear-gradient(135deg, #00843d 0%, #00ba37 100%);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px;
+  height: 56px;
+  box-shadow: 0 2px 12px rgba(0,132,61,.3);
+  flex-shrink: 0;
+}
+
+#m-burger {
+  background: rgba(255,255,255,.18); border: none; cursor: pointer;
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  flex-shrink: 0; transition: background .2s;
+}
+#m-burger:active { background: rgba(255,255,255,.3); }
+#m-burger span { display: block; width: 18px; height: 2px; background: #fff; border-radius: 2px; transition: .3s; }
+#m-burger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+#m-burger.open span:nth-child(2) { opacity: 0; }
+#m-burger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+#m-logo { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; }
+#m-logo-icon {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,.2); border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+#m-logo-text strong { display: block; color: #fff; font-size: 14px; font-weight: 800; line-height: 1.1; }
+#m-logo-text span { color: rgba(255,255,255,.7); font-size: 10px; }
+
+#m-lang { display: flex; gap: 3px; flex-shrink: 0; }
+.m-lang-btn {
+  border: none; cursor: pointer;
+  padding: 6px 9px; border-radius: 8px;
+  font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,.15); color: #fff;
+  transition: .15s; line-height: 1;
+}
+.m-lang-btn.active { background: #fff; color: #00843d; }
+.m-lang-btn:active { opacity: .7; }
+
+/* ════ DRAWER ════ */
+#m-drawer {
+  position: fixed; top: 0; left: 0;
+  width: 80%; max-width: 300px; height: 100vh;
+  background: #fff; z-index: 9999;
+  transform: translateX(-100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column;
+  box-shadow: 4px 0 30px rgba(0,0,0,.15);
+}
+#m-drawer.open { transform: translateX(0); }
+#m-drawer-head {
+  background: linear-gradient(135deg, #00843d, #00ba37);
+  padding: 48px 16px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+#m-drawer-close {
+  background: rgba(255,255,255,.2); border: none; cursor: pointer;
+  color: #fff; font-size: 16px; width: 34px; height: 34px;
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+}
+#m-drawer-nav { flex: 1; overflow-y: auto; padding: 8px 0; }
+.m-nav-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px;
+  text-decoration: none; color: #1a1a2e; font-size: 14px; font-weight: 500;
+  border-bottom: 1px solid #f5f5f5; transition: background .15s;
+}
+.m-nav-link:active { background: #f0faf3; }
+
+#m-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.4); z-index: 9998;
+  backdrop-filter: blur(2px);
+}
+#m-overlay.open { display: block; }
+
+/* ════ MAIN CONTENT ════ */
+#m-main { flex: 1; overflow-y: auto; padding-bottom: 24px; }
+
+/* ════ HERO CARD ════ */
+#m-hero { padding: 16px 16px 0; }
+.m-hero-card {
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,.1);
+  animation: heroIn .4s cubic-bezier(.4,0,.2,1);
+}
+@keyframes heroIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: none; } }
+
+.m-hero-top {
+  background: linear-gradient(135deg, #00843d 0%, #00ba37 100%);
+  padding: 20px;
+  position: relative; overflow: hidden;
+}
+.m-hero-top::before {
+  content:''; position:absolute; top:-20px; right:-20px;
+  width:100px; height:100px; background:rgba(255,255,255,.08); border-radius:50%;
+}
+.m-verified-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.m-verified-icon {
+  width: 36px; height: 36px; background: rgba(255,255,255,.25);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;
+  flex-shrink: 0;
+}
+.m-verified-text { color: #fff; }
+.m-verified-text strong { display: block; font-size: 13px; font-weight: 700; }
+.m-verified-text span { font-size: 10px; opacity: .8; }
+
+.m-student-name-label { color: rgba(255,255,255,.7); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.m-student-name { color: #fff; font-size: 20px; font-weight: 800; line-height: 1.25; }
+
+.m-hero-body { padding: 16px 20px; }
+.m-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.m-meta-item {
+  background: #f8f9fa; border-radius: 12px; padding: 10px 12px;
+}
+.m-meta-label { font-size: 10px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 3px; }
+.m-meta-val { font-size: 13px; font-weight: 700; color: #1a1a2e; }
+.m-meta-val.green { color: #00843d; }
+
+.m-stamp {
+  background: linear-gradient(135deg, #e8f7ee, #f0fff4);
+  border: 1.5px dashed #00ba37;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: #00843d; font-weight: 600; line-height: 1.4;
+}
+.m-stamp-icon { font-size: 20px; flex-shrink: 0; }
+
+/* ════ CONTACTS ════ */
+#m-contacts { padding: 20px 16px 0; }
+.m-section-title {
+  font-size: 13px; font-weight: 700; color: #888;
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+.m-contact-card {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border-radius: 14px;
+  padding: 14px 16px; margin-bottom: 8px;
+  text-decoration: none; color: inherit;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  transition: transform .15s;
+}
+.m-contact-card:active { transform: scale(.98); }
+.m-contact-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+}
+.m-contact-info { flex: 1; }
+.m-contact-label { font-size: 11px; color: #aaa; margin-bottom: 2px; }
+.m-contact-val { font-size: 13px; font-weight: 700; color: #00843d; }
+.m-contact-arrow { font-size: 20px; color: #ccc; font-weight: 300; }
+
+/* ════ FOOTER ════ */
+#m-footer { padding: 20px 16px 10px; text-align: center; }
+#m-socials { display: flex; gap: 12px; justify-content: center; margin-bottom: 16px; }
+.m-social-btn {
+  width: 44px; height: 44px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  text-decoration: none; transition: transform .15s, opacity .15s;
+  flex-shrink: 0;
+}
+.m-social-btn:active { transform: scale(.9); opacity: .8; }
+#m-footer-copy { font-size: 11px; color: #bbb; }
+</style>
+
+<script id="m-script">
+(function() {
+  var TRANSLATIONS = {
+    ru: {
+      verified_title: 'Подтверждение обучения',
+      verified_sub: 'Выдано КАЗУИТС',
+      student_label: 'Студент',
+      meta_form: 'Форма обучения',
+      meta_form_val: 'Очная',
+      meta_status: 'Статус',
+      meta_status_val: 'Активный',
+      stamp_text: 'Данные подтверждены университетом',
+      contacts_title: 'Контакты',
+      email_label: 'Email университета',
+      site_label: 'Официальный сайт',
+    },
+    kz: {
+      verified_title: 'Оқуды растау',
+      verified_sub: 'ҚУИТС берді',
+      student_label: 'Студент',
+      meta_form: 'Оқу нысаны',
+      meta_form_val: 'Күндізгі',
+      meta_status: 'Мәртебесі',
+      meta_status_val: 'Белсенді',
+      stamp_text: 'Деректерді университет растады',
+      contacts_title: 'Байланыс',
+      email_label: 'Университет Email',
+      site_label: 'Ресми сайт',
+    },
+    en: {
+      verified_title: 'Enrollment Confirmation',
+      verified_sub: 'Issued by KAZUITS',
+      student_label: 'Student',
+      meta_form: 'Study form',
+      meta_form_val: 'Full-time',
+      meta_status: 'Status',
+      meta_status_val: 'Active',
+      stamp_text: 'Data confirmed by the university',
+      contacts_title: 'Contacts',
+      email_label: 'University email',
+      site_label: 'Official website',
+    }
+  };
+
+  var currentLang = 'ru';
+  try { currentLang = localStorage.getItem('kazuit_lang') || 'ru'; } catch(e) {}
+  if (!TRANSLATIONS[currentLang]) currentLang = 'ru';
+
+  function t(key) { return (TRANSLATIONS[currentLang] || TRANSLATIONS.ru)[key] || key; }
+
+  function getStudents() {
+    try {
+      var s = localStorage.getItem('kazuit_students');
+      if (s !== null) return JSON.parse(s);
+    } catch(e) {}
+    return [{ id: 1, name: 'Гасанли Айхан Насими оглу' }];
+  }
+
+  function renderHero() {
+    var students = getStudents();
+    var hero = document.getElementById('m-hero');
+    if (!hero) return;
+    var year = new Date().getFullYear();
+    hero.innerHTML = students.map(function(s) {
+      return '<div class="m-hero-card">' +
+        '<div class="m-hero-top">' +
+          '<div class="m-verified-row">' +
+            '<div class="m-verified-icon">✅</div>' +
+            '<div class="m-verified-text">' +
+              '<strong>' + t('verified_title') + '</strong>' +
+              '<span>' + t('verified_sub') + ' · ' + year + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="m-student-name-label">' + t('student_label') + '</div>' +
+          '<div class="m-student-name">' + escHtml(s.name) + '</div>' +
+        '</div>' +
+        '<div class="m-hero-body">' +
+          '<div class="m-meta-grid">' +
+            '<div class="m-meta-item"><div class="m-meta-label">' + t('meta_form') + '</div><div class="m-meta-val">' + t('meta_form_val') + '</div></div>' +
+            '<div class="m-meta-item"><div class="m-meta-label">' + t('meta_status') + '</div><div class="m-meta-val green">● ' + t('meta_status_val') + '</div></div>' +
+          '</div>' +
+          '<div class="m-stamp"><span class="m-stamp-icon">🏛️</span>' + t('stamp_text') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    // Update i18n text in contacts/footer
+    document.querySelectorAll('[data-mi18n]').forEach(function(el) {
+      var key = el.getAttribute('data-mi18n');
+      if (t(key) !== key) el.textContent = t(key);
+    });
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function applyLang(lang) {
+    if (!TRANSLATIONS[lang]) return;
+    currentLang = lang;
+    try { localStorage.setItem('kazuit_lang', lang); } catch(e) {}
+    document.querySelectorAll('.m-lang-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+    renderHero();
+  }
+
+  // Lang buttons
+  document.querySelectorAll('.m-lang-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() { applyLang(btn.dataset.lang); });
+  });
+  // Init lang state
+  document.querySelectorAll('.m-lang-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+
+  // Drawer
+  var burger = document.getElementById('m-burger');
+  var drawer = document.getElementById('m-drawer');
+  var overlay = document.getElementById('m-overlay');
+  var closeBtn = document.getElementById('m-drawer-close');
+
+  function openDrawer() {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    burger.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    overlay.classList.remove('open');
+    burger.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  if (burger) burger.addEventListener('click', openDrawer);
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (overlay) overlay.addEventListener('click', closeDrawer);
+
+  // Re-render on storage changes (admin updates)
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'kazuit_students' || e.key === 'kazuit_lang') {
+      if (e.key === 'kazuit_lang' && e.newValue) currentLang = e.newValue;
+      renderHero();
+    }
+  });
+
+  // Initial render
+  renderHero();
+})();
+</script>
 </body>
 
 </html>
