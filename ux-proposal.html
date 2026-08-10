@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UX предложения — мобильная версия</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+/* ── Layout ── */
+.page { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+h1 { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+.subtitle { color: #666; font-size: 15px; margin-bottom: 40px; }
+
+/* ── Tabs ── */
+.tabs { display: flex; gap: 4px; margin-bottom: 32px; background: #e5e7eb; padding: 4px; border-radius: 10px; width: fit-content; }
+.tab { padding: 9px 22px; border-radius: 7px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; background: none; color: #666; transition: .2s; }
+.tab.active { background: #fff; color: #1a1a2e; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Phone frame ── */
+.phones { display: flex; gap: 48px; align-items: flex-start; flex-wrap: wrap; }
+.phone-wrap { flex: 1; min-width: 280px; max-width: 380px; }
+.phone-label { text-align: center; font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+.phone-label.bad { color: #dc3545; }
+.phone-label.good { color: #00843d; }
+
+.phone-frame {
+  width: 100%;
+  background: #1a1a2e;
+  border-radius: 42px;
+  padding: 14px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.3), inset 0 0 0 2px #2d2d4e;
+  position: relative;
+}
+.phone-frame::before {
+  content: '';
+  display: block;
+  width: 100px;
+  height: 28px;
+  background: #1a1a2e;
+  border-radius: 0 0 18px 18px;
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+.phone-screen {
+  background: #f5f5f5;
+  border-radius: 30px;
+  overflow: hidden;
+  height: 640px;
+  overflow-y: auto;
+  position: relative;
+  scrollbar-width: none;
+}
+.phone-screen::-webkit-scrollbar { display: none; }
+
+/* ── CURRENT design mockup ── */
+.curr-topbar {
+  background: #f8f8f8;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  gap: 6px;
+}
+.curr-socials { display: flex; gap: 5px; }
+.curr-socials span {
+  width: 22px; height: 22px;
+  background: #555;
+  border-radius: 50%;
+  display: block;
+}
+.curr-bvi { font-size: 9px; color: #444; flex: 1; text-align: center; line-height: 1.2; }
+.curr-lang { display: flex; gap: 3px; }
+.curr-lang span {
+  padding: 3px 7px;
+  font-size: 9px;
+  font-weight: 700;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  color: #444;
+}
+.curr-lang span.active { background: #00ba37; color: #fff; border-color: #00ba37; }
+
+.curr-header {
+  background: linear-gradient(135deg, #e8f7ee 0%, #f5fff8 100%);
+  padding: 24px 12px 18px;
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+}
+.curr-logo-bg {
+  width: 120%;
+  height: 80px;
+  background: repeating-linear-gradient(45deg, #e0f0e5 0px, #e0f0e5 2px, transparent 2px, transparent 12px);
+  position: absolute;
+  top: 0; left: -10%;
+  opacity: .4;
+}
+.curr-logo-icon {
+  width: 50px; height: 50px;
+  background: #00ba37;
+  border-radius: 10px;
+  margin: 0 auto 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  position: relative;
+}
+.curr-title { font-size: 11px; font-weight: 800; color: #00843d; line-height: 1.3; position: relative; }
+.curr-subtitle { font-size: 8px; color: #00843d; opacity: .7; margin-top: 2px; position: relative; }
+
+.curr-navbar {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.curr-hamburger { display: flex; flex-direction: column; gap: 3px; cursor: pointer; }
+.curr-hamburger span { display: block; width: 20px; height: 2px; background: #00843d; border-radius: 2px; }
+.curr-nav-items { display: flex; gap: 8px; overflow: hidden; flex: 1; }
+.curr-nav-items span { font-size: 8px; color: #333; white-space: nowrap; }
+
+.curr-section { padding: 20px 12px; }
+.curr-section-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: #1a1a2e; }
+
+.curr-table { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+.curr-thead { background: #00ba37; padding: 8px 10px; display: grid; grid-template-columns: 30px 1fr 1fr; gap: 4px; }
+.curr-thead span { font-size: 8px; color: #fff; font-weight: 700; }
+.curr-tbody { padding: 10px; }
+.curr-row { display: grid; grid-template-columns: 30px 1fr 1fr; gap: 4px; align-items: center; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+.curr-num { font-size: 9px; color: #aaa; }
+.curr-name { font-size: 9px; color: #1a1a2e; font-weight: 600; line-height: 1.3; }
+.curr-badge-old {
+  display: inline-block;
+  padding: 3px 6px;
+  background: #dc3545;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 7px;
+  font-weight: 600;
+}
+.curr-email-block {
+  margin-top: 10px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 9px;
+  color: #555;
+  box-shadow: 0 2px 8px rgba(0,0,0,.07);
+}
+.curr-email-block a { color: #00843d; }
+
+/* ── PROBLEM annotations ── */
+.annotation-list { margin-top: 20px; }
+.annotation { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+.ann-num {
+  min-width: 24px; height: 24px;
+  background: #dc3545; color: #fff;
+  border-radius: 50%; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.ann-text { font-size: 13px; line-height: 1.5; }
+.ann-text strong { display: block; color: #dc3545; font-size: 12px; }
+
+/* ── NEW design mockup ── */
+.new-header {
+  background: linear-gradient(160deg, #00843d 0%, #00ba37 100%);
+  padding: 44px 16px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.new-header::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 50%;
+}
+.new-header::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: -20px;
+  width: 80px; height: 80px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 50%;
+}
+.new-topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.new-hamburger-btn {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 4px; cursor: pointer;
+}
+.new-hamburger-btn span { display: block; width: 16px; height: 2px; background: #fff; border-radius: 2px; }
+.new-lang-pills { display: flex; gap: 4px; }
+.new-lang-pills button {
+  border: none; cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  transition: .2s;
+}
+.new-lang-pills button.active { background: #fff; color: #00843d; }
+
+.new-logo-row { display: flex; align-items: center; gap: 10px; position: relative; }
+.new-logo-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.new-logo-text { color: #fff; }
+.new-logo-text strong { display: block; font-size: 10px; font-weight: 800; line-height: 1.2; }
+.new-logo-text span { font-size: 8px; opacity: .75; }
+
+.new-main { padding: 0 14px 20px; background: #f5f5f5; }
+
+/* Hero card */
+.hero-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 20px 16px;
+  margin-top: -1px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+  position: relative;
+  z-index: 2;
+}
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #00843d, #00ba37);
+  border-radius: 18px 18px 0 0;
+}
+.hero-verified {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.hero-check {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #00843d, #00ba37);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.hero-verified-text { font-size: 10px; color: #00843d; font-weight: 700; line-height: 1.3; }
+.hero-verified-text span { display: block; font-size: 8px; font-weight: 400; color: #888; }
+
+.hero-divider { height: 1px; background: #f0f0f0; margin: 10px 0; }
+
+.hero-name-label { font-size: 9px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.hero-name { font-size: 15px; font-weight: 800; color: #1a1a2e; line-height: 1.3; }
+
+.hero-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.hero-meta-item { background: #f8f9fa; border-radius: 10px; padding: 8px 10px; }
+.hero-meta-item .label { font-size: 8px; color: #aaa; font-weight: 600; margin-bottom: 2px; }
+.hero-meta-item .val { font-size: 9px; font-weight: 700; color: #1a1a2e; }
+
+.hero-stamp {
+  margin-top: 14px;
+  background: linear-gradient(135deg, #e8f7ee, #f0fff4);
+  border: 1.5px dashed #00ba37;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  color: #00843d;
+  font-weight: 700;
+}
+
+.section-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 0 10px; }
+.section-head h3 { font-size: 12px; font-weight: 700; color: #1a1a2e; }
+
+.new-contact {
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+.contact-icon {
+  width: 34px; height: 34px;
+  background: #e8f7ee;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.contact-text { font-size: 9px; }
+.contact-text .clabel { color: #aaa; margin-bottom: 2px; }
+.contact-text .cval { color: #00843d; font-weight: 700; }
+
+.new-socials {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: center;
+}
+.new-social-btn {
+  width: 36px; height: 36px;
+  background: #fff;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+
+/* ── Improvements list ── */
+.improvements { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.improvement-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  border-left: 4px solid #00ba37;
+}
+.improvement-card.critical { border-left-color: #dc3545; }
+.improvement-card.medium { border-left-color: #ffc107; }
+.imp-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.imp-icon { font-size: 24px; }
+.imp-title { font-size: 15px; font-weight: 700; }
+.imp-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.tag-crit { background: #fde8e8; color: #dc3545; }
+.tag-med { background: #fff3cd; color: #856404; }
+.tag-low { background: #e8f7ee; color: #00843d; }
+.imp-body { font-size: 13px; color: #555; line-height: 1.6; }
+.imp-body strong { color: #1a1a2e; }
+
+/* ── Before/after row ── */
+.ba-row { display: flex; gap: 8px; margin-top: 8px; }
+.ba-item { flex: 1; border-radius: 8px; padding: 8px 10px; font-size: 11px; line-height: 1.4; }
+.ba-before { background: #fde8e8; color: #a00; }
+.ba-after { background: #e8f7ee; color: #006; }
+.ba-label { font-size: 9px; font-weight: 700; text-transform: uppercase; opacity: .6; margin-bottom: 3px; }
+
+/* ── Tab 3: changes ── */
+.changes-section { margin-bottom: 32px; }
+.changes-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+.change-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; align-items: flex-start; }
+.change-item:last-child { border-bottom: none; }
+.change-icon { font-size: 22px; flex-shrink: 0; width: 40px; text-align: center; }
+.change-body h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.change-body p { font-size: 13px; color: #666; line-height: 1.5; }
+.priority { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; margin-bottom: 6px; }
+.p-high { background: #fde8e8; color: #dc3545; }
+.p-med { background: #fff3cd; color: #856404; }
+.p-low { background: #e8f7ee; color: #00843d; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>UX улучшения — мобильная версия</h1>
+  <p class="subtitle">Анализ текущего состояния и предложения по редизайну для телефонов</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('compare')">Сравнение</button>
+    <button class="tab" onclick="showTab('problems')">Проблемы</button>
+    <button class="tab" onclick="showTab('changes')">Что менять</button>
+  </div>
+
+  <!-- TAB 1: COMPARE -->
+  <div class="tab-content active" id="tab-compare">
+    <div class="phones">
+
+      <!-- CURRENT -->
+      <div class="phone-wrap">
+        <div class="phone-label bad">❌ Сейчас — топорно</div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+
+            <!-- Top bar -->
+            <div class="curr-topbar">
+              <div class="curr-socials">
+                <span style="background:#4a76a8"></span>
+                <span style="background:#c13584"></span>
+                <span style="background:#ff0000"></span>
+              </div>
+              <div class="curr-bvi">Версия для слабовидящих</div>
+              <div class="curr-lang">
+                <span class="active">KAZ</span>
+                <span>RUS</span>
+                <span>ENG</span>
+              </div>
+            </div>
+
+            <!-- Big heavy header -->
+            <div class="curr-header">
+              <div class="curr-logo-bg"></div>
+              <div class="curr-logo-icon">🎓</div>
+              <div class="curr-title">КАЗАХСТАНСКИЙ УНИВЕРСИТЕТ<br>ИННОВАЦИОННЫХ И ТЕЛЕКОММУНИКАЦИОННЫХ СИСТЕМ</div>
+            </div>
+
+            <!-- Nav bar with overflow -->
+            <div class="curr-navbar">
+              <div class="curr-hamburger">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="curr-nav-items">
+                <span>Наши студенты</span>
+                <span>О ВУЗЕ</span>
+                <span>Обучение</span>
+                <span>Кафедры</span>
+                <span>Абитуриентам</span>
+              </div>
+            </div>
+
+            <!-- Section -->
+            <div class="curr-section">
+              <div class="curr-section-title">Наши студенты</div>
+              <div class="curr-table">
+                <div class="curr-thead">
+                  <span>№</span>
+                  <span>ФИО студента</span>
+                  <span>Статус</span>
+                </div>
+                <div class="curr-tbody">
+                  <div class="curr-row">
+                    <div class="curr-num">1</div>
+                    <div class="curr-name">Гасанли Айхан Насими оглу</div>
+                    <div><span class="curr-badge-old">✅ Является студентом КАЗУИТС</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="curr-email-block">
+                Email: <a href="#">student@kazuit.kz</a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="annotation-list">
+          <div class="annotation"><div class="ann-num">1</div><div class="ann-text"><strong>Шапка занимает 40% экрана</strong> и не несёт полезной информации</div></div>
+          <div class="annotation"><div class="ann-num">2</div><div class="ann-text"><strong>Таблица с одной строкой</strong> — лишняя структура, непонятная с первого взгляда</div></div>
+          <div class="annotation"><div class="ann-num">3</div><div class="ann-text"><strong>Бейдж «✅ студент» — крошечный</strong>, это главная информация страницы</div></div>
+          <div class="annotation"><div class="ann-num">4</div><div class="ann-text"><strong>Навбар с 10 пунктами</strong> виден на мобиле — лишний шум</div></div>
+          <div class="annotation"><div class="ann-num">5</div><div class="ann-text"><strong>Верхняя полоса (соцсети + BVI + язык)</strong> мелкая, неудобная для касания</div></div>
+        </div>
+      </div>
+
+      <!-- PROPOSED -->
+      <div class="phone-wrap">
+        <div class="phone-label good">✅ Предложение — чисто и ясно</div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+
+            <!-- New header -->
+            <div class="new-header">
+              <div class="new-topbar">
+                <div class="new-hamburger-btn">
+                  <span></span><span></span><span></span>
+                </div>
+                <div class="new-lang-pills">
+                  <button>KAZ</button>
+                  <button class="active">RUS</button>
+                  <button>ENG</button>
+                </div>
+              </div>
+              <div class="new-logo-row">
+                <div class="new-logo-icon">🎓</div>
+                <div class="new-logo-text">
+                  <strong>QAZIITU University</strong>
+                  <span>Казахстанский университет ИТС</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="new-main">
+
+              <!-- Hero verification card -->
+              <div class="hero-card">
+                <div class="hero-verified">
+                  <div class="hero-check">✅</div>
+                  <div class="hero-verified-text">
+                    Подтверждение обучения
+                    <span>Выдано КАЗУИТС · 2025–2026</span>
+                  </div>
+                </div>
+
+                <div class="hero-divider"></div>
+
+                <div class="hero-name-label">Студент</div>
+                <div class="hero-name">Гасанли Айхан<br>Насими оглу</div>
+
+                <div class="hero-meta">
+                  <div class="hero-meta-item">
+                    <div class="label">Форма обучения</div>
+                    <div class="val">Очная</div>
+                  </div>
+                  <div class="hero-meta-item">
+                    <div class="label">Статус</div>
+                    <div class="val" style="color:#00843d">Активный</div>
+                  </div>
+                </div>
+
+                <div class="hero-stamp">
+                  <span style="font-size:16px">🏛️</span>
+                  Данные подтверждены университетом
+                </div>
+              </div>
+
+              <!-- Contact -->
+              <div class="section-head">
+                <h3>Контакты</h3>
+              </div>
+              <div class="new-contact">
+                <div class="contact-icon">✉️</div>
+                <div class="contact-text">
+                  <div class="clabel">Email университета</div>
+                  <div class="cval">student@kazuit.kz</div>
+                </div>
+              </div>
+              <div class="new-contact" style="margin-top:8px;">
+                <div class="contact-icon" style="background:#e8f3ff">🌐</div>
+                <div class="contact-text">
+                  <div class="clabel">Официальный сайт</div>
+                  <div class="cval">kazuits.edu.kz</div>
+                </div>
+              </div>
+
+              <!-- Socials -->
+              <div class="new-socials">
+                <div class="new-social-btn">🔵</div>
+                <div class="new-social-btn">📷</div>
+                <div class="new-social-btn">▶️</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+        <div class="annotation-list">
+          <div class="annotation"><div class="ann-num" style="background:#00843d">A</div><div class="ann-text"><strong>Компактный header</strong> — только логотип + переключатель языка + бургер</div></div>
+          <div class="annotation"><div class="ann-num" style="background:#00843d">B</div><div class="ann-text"><strong>Hero-карточка</strong> — имя студента и подтверждение занимают 70% первого экрана</div></div>
+          <div class="annotation"><div class="ann-num" style="background:#00843d">C</div><div class="ann-text"><strong>Мета-блок</strong> — форма обучения, статус дают контекст</div></div>
+          <div class="annotation"><div class="ann-num" style="background:#00843d">D</div><div class="ann-text"><strong>«Печать» университета</strong> — добавляет доверие и официальность</div></div>
+          <div class="annotation"><div class="ann-num" style="background:#00843d">E</div><div class="ann-text"><strong>Контакты как карточки</strong> — крупные touch targets, не мелкий текст</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TAB 2: PROBLEMS -->
+  <div class="tab-content" id="tab-problems">
+    <div class="improvements">
+
+      <div class="improvement-card critical">
+        <div class="imp-header">
+          <div class="imp-icon">📐</div>
+          <div class="imp-title">Шапка съедает экран</div>
+        </div>
+        <span class="imp-tag tag-crit">Критично</span>
+        <div class="imp-body">
+          Логотип с SVG-графикой, фоновое изображение и декоративный элемент занимают <strong>~40% первого экрана</strong> не давая никакой полезной информации. Пользователь открыл QR-код чтобы убедиться что студент существует — а видит декоративный заголовок.
+          <div class="ba-row">
+            <div class="ba-item ba-before"><div class="ba-label">Сейчас</div>Огромный header, 200px+ высота</div>
+            <div class="ba-item ba-after"><div class="ba-label">Предлагаю</div>Компактная шапка 56px, логотип + язык</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card critical">
+        <div class="imp-header">
+          <div class="imp-icon">🎯</div>
+          <div class="imp-title">Главная инфо спрятана</div>
+        </div>
+        <span class="imp-tag tag-crit">Критично</span>
+        <div class="imp-body">
+          Цель страницы — <strong>подтвердить что человек является студентом</strong>. Но сейчас это: маленький бейдж в третьей колонке таблицы. Пользователь не понимает что он видит и зачем.
+          <div class="ba-row">
+            <div class="ba-item ba-before"><div class="ba-label">Сейчас</div>Бейдж ≈9px в ячейке таблицы</div>
+            <div class="ba-item ba-after"><div class="ba-label">Предлагаю</div>Hero-карточка со статусом как главный элемент</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card critical">
+        <div class="imp-header">
+          <div class="imp-icon">📋</div>
+          <div class="imp-title">Таблица не нужна</div>
+        </div>
+        <span class="imp-tag tag-crit">Критично</span>
+        <div class="imp-body">
+          Таблица с одним студентом — это overkill. Три колонки (№, ФИО, Статус) для одной строки создают лишнюю структуру и визуальный шум. На мобиле таблица ещё и плохо масштабируется.
+          <div class="ba-row">
+            <div class="ba-item ba-before"><div class="ba-label">Сейчас</div>Table с thead/tbody/td для 1 студента</div>
+            <div class="ba-item ba-after"><div class="ba-label">Предлагаю</div>Профильная карточка с именем и статусом</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card medium">
+        <div class="imp-header">
+          <div class="imp-icon">☰</div>
+          <div class="imp-title">Навигация — лишний шум</div>
+        </div>
+        <span class="imp-tag tag-med">Важно</span>
+        <div class="imp-body">
+          Горизонтальный навбар с 10 пунктами видится на мобиле. Пользователь по QR-коду пришёл на конкретную страницу — ему не нужна навигация по университету. Бургер-меню есть, но выглядит незаметно.
+          <div class="ba-row">
+            <div class="ba-item ba-before"><div class="ba-label">Сейчас</div>Навбар + бургер вместе, непонятно что нажимать</div>
+            <div class="ba-item ba-after"><div class="ba-label">Предлагаю</div>Только иконка бургера в шапке, сайт в ящике</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card medium">
+        <div class="imp-header">
+          <div class="imp-icon">🌐</div>
+          <div class="imp-title">Переключатель языка</div>
+        </div>
+        <span class="imp-tag tag-med">Важно</span>
+        <div class="imp-body">
+          Три маленькие кнопки KAZ/RUS/ENG в серой полосе — <strong>touch target ~24px</strong>, это ниже минимума 44px (Apple HIG). Плюс полоса смешивает языки с соцсетями и кнопкой слабовидящих.
+          <div class="ba-row">
+            <div class="ba-item ba-before"><div class="ba-label">Сейчас</div>Крошечные кнопки в серой полосе</div>
+            <div class="ba-item ba-after"><div class="ba-label">Предлагаю</div>Крупные pill-кнопки в шапке, 36px высота</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card medium">
+        <div class="imp-header">
+          <div class="imp-icon">📧</div>
+          <div class="imp-title">Email как текст</div>
+        </div>
+        <span class="imp-tag tag-med">Важно</span>
+        <div class="imp-body">
+          Email-адрес — просто строка текста с маленькой ссылкой. На мобиле сложно скопировать или нажать. Нет иконки, нет визуального акцента.
+          <div class="ba-row">
+            <div class="ba-item ba-before"><div class="ba-label">Сейчас</div>«Email: student@kazuit.kz» — мелкий текст</div>
+            <div class="ba-item ba-after"><div class="ba-label">Предлагаю</div>Карточка с иконкой, крупный touch target</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card">
+        <div class="imp-header">
+          <div class="imp-icon">🔵</div>
+          <div class="imp-title">Соцсети: мелкие SVG</div>
+        </div>
+        <span class="imp-tag tag-low">Некритично</span>
+        <div class="imp-body">
+          Иконки VK, Instagram, YouTube — кастомные SVG ~22px в серой полосе. Слишком мелко для касания, смешаны с навигационными элементами.
+          <div class="ba-row">
+            <div class="ba-item ba-before"><div class="ba-label">Сейчас</div>SVG иконки 22px в topbar</div>
+            <div class="ba-item ba-after"><div class="ba-label">Предлагаю</div>Круглые кнопки 44px в footer</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="improvement-card">
+        <div class="imp-header">
+          <div class="imp-icon">🏛️</div>
+          <div class="imp-title">Нет ощущения официальности</div>
+        </div>
+        <span class="imp-tag tag-low">Улучшение</span>
+        <div class="imp-body">
+          Страница открыта по QR-коду — человек хочет убедиться в подлинности. Добавление элементов «печати» (дата выдачи, подтверждение от университета) <strong>сильно увеличит доверие</strong>.
+          <div class="ba-row">
+            <div class="ba-item ba-before"><div class="ba-label">Сейчас</div>Просто зелёный бейдж-текст</div>
+            <div class="ba-item ba-after"><div class="ba-label">Предлагаю</div>Карточка со «штампом» и годом обучения</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TAB 3: CHANGES -->
+  <div class="tab-content" id="tab-changes">
+
+    <div class="changes-section">
+      <h2>🔴 Критические изменения</h2>
+
+      <div class="change-item">
+        <div class="change-icon">🗑️</div>
+        <div class="change-body">
+          <span class="priority p-high">Обязательно</span>
+          <h3>Убрать таблицу — заменить на Hero-карточку</h3>
+          <p>Вся информация о студенте (имя + статус) должна быть оформлена как большая карточка-профиль в первом экране, а не спрятана в таблице. Имя крупно, статус с зелёной иконкой, дата подтверждения.</p>
+        </div>
+      </div>
+
+      <div class="change-item">
+        <div class="change-icon">📐</div>
+        <div class="change-body">
+          <span class="priority p-high">Обязательно</span>
+          <h3>Уменьшить шапку до 56–70px</h3>
+          <p>Оставить только: логотип (маленький) + аббревиатура QAZIITU + бургер-кнопка + кнопки языка. Весь декоративный SVG и фоновое изображение убрать с мобильного вида (display:none на ≤768px).</p>
+        </div>
+      </div>
+
+      <div class="change-item">
+        <div class="change-icon">🎯</div>
+        <div class="change-body">
+          <span class="priority p-high">Обязательно</span>
+          <h3>Сделать подтверждение обучения главным элементом</h3>
+          <p>Добавить в карточку студента: «Данные подтверждены университетом», год обучения, форму обучения. Пользователь должен понять цель страницы за 2 секунды.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="changes-section">
+      <h2>🟡 Важные улучшения</h2>
+
+      <div class="change-item">
+        <div class="change-icon">🌐</div>
+        <div class="change-body">
+          <span class="priority p-med">Важно</span>
+          <h3>Переключатель языка → крупные pill-кнопки в шапке</h3>
+          <p>Перенести KAZ / RUS / ENG в правый угол шапки как крупные пилюли (min 36px высота). Убрать из серой полосы вместе с BVI и соцсетями.</p>
+        </div>
+      </div>
+
+      <div class="change-item">
+        <div class="change-icon">☰</div>
+        <div class="change-body">
+          <span class="priority p-med">Важно</span>
+          <h3>Бургер-кнопка — заметная, слева в шапке</h3>
+          <p>Квадратная кнопка 40×40px, контрастная (белый фон или тёмный). Открывает боковой ящик. Убрать горизонтальный навбар с мобильного вида полностью.</p>
+        </div>
+      </div>
+
+      <div class="change-item">
+        <div class="change-icon">📧</div>
+        <div class="change-body">
+          <span class="priority p-med">Важно</span>
+          <h3>Контакты → карточки с иконками</h3>
+          <p>Email и ссылка на сайт оформить как карточки с иконкой слева и крупным touch target (~50px высота). Добавить кнопку «Скопировать» рядом с email.</p>
+        </div>
+      </div>
+
+      <div class="change-item">
+        <div class="change-icon">🚫</div>
+        <div class="change-body">
+          <span class="priority p-med">Важно</span>
+          <h3>Убрать серую топ-полосу (BVI, дата, соцсети)</h3>
+          <p>На мобиле она создаёт шум. Соцсети переехать в футер, BVI — в бургер-меню, дата — убрать полностью (не несёт смысла на этой странице).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="changes-section">
+      <h2>🟢 Улучшения второго приоритета</h2>
+
+      <div class="change-item">
+        <div class="change-icon">🔵</div>
+        <div class="change-body">
+          <span class="priority p-low">Желательно</span>
+          <h3>Соцсети → footer с крупными кнопками</h3>
+          <p>VK, Instagram, YouTube — круглые кнопки 44px в самом низу страницы. Touch-friendly, не мешают основному контенту.</p>
+        </div>
+      </div>
+
+      <div class="change-item">
+        <div class="change-icon">🎨</div>
+        <div class="change-body">
+          <span class="priority p-low">Желательно</span>
+          <h3>Зелёный header вместо белого</h3>
+          <p>Шапка в фирменном зелёном (#00843d → #00ba37 градиент). Логотип и кнопки белые. Создаёт брендовый первый экран и визуально разделяет шапку от контента.</p>
+        </div>
+      </div>
+
+      <div class="change-item">
+        <div class="change-icon">✨</div>
+        <div class="change-body">
+          <span class="priority p-low">Желательно</span>
+          <h3>Micro-animations — плавное появление карточки</h3>
+          <p>Карточка студента появляется с лёгким fade+slide при загрузке (0.3s). Бургер-меню открывается с анимацией. Делает интерфейс живым.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
