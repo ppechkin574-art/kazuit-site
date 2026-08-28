@@ -93,7 +93,9 @@ jQuery(window).on('load',  function() {
   function fetchStudentsJson() {
     var file = studentsPageFile();
     var sources = [
-      function() { return fetch('https://api.github.com/repos/ppechkin574-art/kazuit-site/contents/' + file,
+      // ?_=… обязателен: без токена ответы API идут через CDN GitHub (max-age=60)
+      // и до минуты отдают версию ДО публикации; уникальный параметр кеш обходит.
+      function() { return fetch('https://api.github.com/repos/ppechkin574-art/kazuit-site/contents/' + file + '?_=' + Date.now(),
         { headers: { 'Accept': 'application/vnd.github.raw+json' }, cache: 'no-store' }); },
       function() { return fetch(location.origin + '/' + file + '?_=' + Date.now(), { cache: 'no-store' }); }
     ];
