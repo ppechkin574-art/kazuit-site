@@ -1,0 +1,28 @@
+name: Deploy to Cloudflare Pages
+
+# Каждый пуш в main (в том числе публикация из админки через GitHub API)
+# запускает выкатку проекта Cloudflare Pages `kazuits-site`. Нужен, потому что
+# Git-интеграция Cloudflare для этого проекта пуши не подхватывает.
+# Секреты: CF_API_TOKEN (Cloudflare Pages — Edit), CF_ACCOUNT_ID.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: cloudflare-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare Pages deployment
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/kazuits-site/deployments" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+          | python3 -c 'import sys,json; d=json.load(sys.stdin); r=d.get("result") or {}; print("deployment:", r.get("id"), "errors:", d.get("errors")); sys.exit(0 if d.get("success") else 1)'

@@ -90,14 +90,20 @@ jQuery(window).on('load',  function() {
     var n = m ? parseInt(m[1], 10) : 1;
     return n > 1 ? 'data-' + n + '.json' : 'data.json';
   }
+  var _studentsPromise = null;
   function fetchStudentsJson() {
+    // Один запрос на просмотр: десктопный и мобильный скрипты делят результат,
+    // иначе каждый просмотр тратил бы два запроса из лимита GitHub.
+    if (_studentsPromise) return _studentsPromise;
     var file = studentsPageFile();
     var sources = [
       // ?_=… обязателен: без токена ответы API идут через CDN GitHub (max-age=60)
       // и до минуты отдают версию ДО публикации; уникальный параметр кеш обходит.
       function() { return fetch('https://api.github.com/repos/ppechkin574-art/kazuit-site/contents/' + file + '?_=' + Date.now(),
         { headers: { 'Accept': 'application/vnd.github.raw+json' }, cache: 'no-store' }); },
-      function() { return fetch(location.origin + '/' + file + '?_=' + Date.now(), { cache: 'no-store' }); }
+      function() { return fetch(location.origin + '/' + file + '?_=' + Date.now(), { cache: 'no-store' }); },
+      // raw GitHub: без выкатки, но кеш до 5 минут — последний запасной путь.
+      function() { return fetch('https://raw.githubusercontent.com/ppechkin574-art/kazuit-site/main/' + file + '?_=' + Date.now(), { cache: 'no-store' }); }
     ];
     function tryNext(i) {
       if (i >= sources.length) return Promise.reject(new Error('no source'));
@@ -107,7 +113,8 @@ jQuery(window).on('load',  function() {
         return r.json();
       }).catch(function() { return tryNext(i + 1); });
     }
-    return tryNext(0);
+    _studentsPromise = tryNext(0);
+    return _studentsPromise;
   }
 </script>
 </head>
