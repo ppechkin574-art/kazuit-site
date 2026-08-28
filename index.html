@@ -80,6 +80,27 @@ jQuery(window).on('load',  function() {
       #nav-overlay { display: none !important; }
     }
   </style>
+<script>
+  // Данные студентов: сначала GitHub API — там они сразу после публикации в
+  // админке (без токена лимит 60 запросов в час с IP); затем свой хостинг —
+  // он обновляется только после выкатки. Ответ HTML вместо JSON = файла нет.
+  function fetchStudentsJson() {
+    var sources = [
+      function() { return fetch('https://api.github.com/repos/ppechkin574-art/kazuit-site/contents/data.json',
+        { headers: { 'Accept': 'application/vnd.github.raw+json' }, cache: 'no-store' }); },
+      function() { return fetch(location.origin + '/data.json?_=' + Date.now(), { cache: 'no-store' }); }
+    ];
+    function tryNext(i) {
+      if (i >= sources.length) return Promise.reject(new Error('no source'));
+      return sources[i]().then(function(r) {
+        var ct = r.headers.get('content-type') || '';
+        if (!r.ok || /html/i.test(ct)) throw new Error('bad ' + r.status);
+        return r.json();
+      }).catch(function() { return tryNext(i + 1); });
+    }
+    return tryNext(0);
+  }
+</script>
 </head>
 
 <body>
@@ -791,8 +812,7 @@ jQuery(window).on('load',  function() {
         }).join('');
     }
 
-    fetch(location.origin + '/data.json?_=' + Date.now())
-        .then(function(r) { return r.json(); })
+    fetchStudentsJson()
         .then(function(d) { renderStudents(d.students || DEFAULT_STUDENTS); })
         .catch(function() { renderStudents(DEFAULT_STUDENTS); });
 
@@ -1032,8 +1052,7 @@ jQuery(window).on('load',  function() {
   if (overlay) overlay.addEventListener('click', closeDrawer);
 
   // Load from server
-  fetch(location.origin + '/data.json?_=' + Date.now())
-    .then(function(r) { return r.json(); })
+  fetchStudentsJson()
     .then(function(d) { _mobileStudents = d.students || _mobileStudents; renderStudents(); })
     .catch(function() { renderStudents(); });
 })();
