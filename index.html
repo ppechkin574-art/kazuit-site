@@ -161,6 +161,7 @@ jQuery(window).on('load',  function() {
             <tr>
               <th data-mi18n="th_num">&#8470;</th>
               <th data-mi18n="th_name">ФИО студента</th>
+              <th data-mi18n="th_date">Дата</th>
               <th data-mi18n="th_status">Статус</th>
             </tr>
           </thead>
@@ -617,6 +618,7 @@ jQuery(window).on('load',  function() {
                         <tr style="background: #00ba37; color: #fff;">
                             <th style="padding: 15px 20px; font-weight: 600; font-size: 16px; border: none;" data-i18n="th_num">№</th>
                             <th style="padding: 15px 20px; font-weight: 600; font-size: 16px; border: none;" data-i18n="th_name">ФИО студента</th>
+                            <th style="padding: 15px 20px; font-weight: 600; font-size: 16px; border: none;" data-i18n="th_date">Дата</th>
                             <th style="padding: 15px 20px; font-weight: 600; font-size: 16px; border: none;" data-i18n="th_status">Статус</th>
                         </tr>
                     </thead>
@@ -635,6 +637,7 @@ jQuery(window).on('load',  function() {
                         students_title: "Наши студенты",
                         th_num: "№",
                         th_name: "ФИО студента",
+                        th_date: "Дата",
                         th_status: "Статус",
                         status_badge: "✅ Является студентом КАЗУИТС",
                         email_label: "Email:",
@@ -654,6 +657,7 @@ jQuery(window).on('load',  function() {
                         students_title: "Біздің студенттер",
                         th_num: "№",
                         th_name: "Студенттің аты-жөні",
+                        th_date: "Күні",
                         th_status: "Статус",
                         status_badge: "✅ ҚУИTС студенті",
                         email_label: "Email:",
@@ -673,6 +677,7 @@ jQuery(window).on('load',  function() {
                         students_title: "Our students",
                         th_num: "№",
                         th_name: "Student name",
+                        th_date: "Date",
                         th_status: "Статус",
                         status_badge: "✅ Enrolled at KAZUITS",
                         email_label: "Email:",
@@ -812,6 +817,7 @@ jQuery(window).on('load',  function() {
             return '<tr>' +
                 '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;">' + (i+1) + '</td>' +
                 '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;font-weight:500;">' + escHtml(s.name) + '</td>' +
+                '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;white-space:nowrap;">' + escHtml(s.date || '—') + '</td>' +
                 '<td style="padding:15px 20px;vertical-align:middle;border-bottom:1px solid #eee;">' +
                     '<span style="display:inline-block;padding:6px 16px;background:#e8f7ee;color:#00843d;border:1.5px solid #00ba37;border-radius:20px;font-size:13px;font-weight:600;" data-i18n="status_badge">' + badge + '</span>' +
                 '</td>' +
@@ -971,6 +977,7 @@ jQuery(window).on('load',  function() {
       students_title: 'Наши студенты',
       th_num: '№',
       th_name: 'ФИО студента',
+      th_date: 'Дата',
       th_status: 'Статус',
       status_badge: '✅ Является студентом КАЗУИТС',
       email_label: 'Email:'
@@ -979,6 +986,7 @@ jQuery(window).on('load',  function() {
       students_title: 'Біздің студенттер',
       th_num: '№',
       th_name: 'Студенттің аты-жөні',
+      th_date: 'Күні',
       th_status: 'Статус',
       status_badge: '✅ ҚУИТС студенті',
       email_label: 'Email:'
@@ -987,6 +995,7 @@ jQuery(window).on('load',  function() {
       students_title: 'Our students',
       th_num: '№',
       th_name: 'Student name',
+      th_date: 'Date',
       th_status: 'Status',
       status_badge: '✅ Enrolled at KAZUITS',
       email_label: 'Email:'
@@ -1012,6 +1021,7 @@ jQuery(window).on('load',  function() {
       return '<tr>' +
         '<td>' + (i + 1) + '</td>' +
         '<td style="font-weight:500;">' + escHtml(s.name) + '</td>' +
+        '<td style="white-space:nowrap;">' + escHtml(s.date || '—') + '</td>' +
         '<td><span class="m-status-badge">' + t('status_badge') + '</span></td>' +
       '</tr>';
     }).join('');

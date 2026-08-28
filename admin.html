@@ -230,6 +230,7 @@
           <tr>
             <th>№</th>
             <th>ФИО студента</th>
+            <th>Дата</th>
             <th>Статус</th>
             <th>Действия</th>
           </tr>
@@ -255,6 +256,8 @@
     <h3 id="modal-title">Добавить студента</h3>
     <label>ФИО студента</label>
     <input type="text" id="modal-name" placeholder="Фамилия Имя Отчество" autocomplete="off">
+    <label>Дата</label>
+    <input type="text" id="modal-date" placeholder="ДД.ММ.ГГГГ" autocomplete="off">
     <div class="modal-actions">
       <button class="cancel-btn" onclick="closeModal()">Отмена</button>
       <button class="save-btn" onclick="saveStudent()">Сохранить</button>
@@ -577,6 +580,7 @@ function renderTable() {
     return '<tr>' +
       '<td style="color:#888;font-weight:500;">' + (i+1) + '</td>' +
       '<td style="font-weight:600;">' + escHtml(s.name) + '</td>' +
+      '<td style="white-space:nowrap;color:#555;">' + escHtml(s.date || '—') + '</td>' +
       '<td><span class="status-badge">✅ Студент</span></td>' +
       '<td>' +
         '<button class="action-btn edit-btn" onclick="openModal(' + s.id + ')">✏️ Изменить</button>' +
@@ -595,13 +599,16 @@ function openModal(id) {
   editingId = id || null;
   var title = document.getElementById("modal-title");
   var input = document.getElementById("modal-name");
+  var dateInput = document.getElementById("modal-date");
   if (id) {
     title.textContent = "Изменить студента";
     var s = getStudents().find(function(x){ return x.id === id; });
     input.value = s ? s.name : "";
+    dateInput.value = s && s.date ? s.date : "";
   } else {
     title.textContent = "Добавить студента";
     input.value = "";
+    dateInput.value = "";
   }
   document.getElementById("modal-overlay").classList.add("open");
   setTimeout(function(){ input.focus(); }, 50);
@@ -615,14 +622,15 @@ function closeModal() {
 function saveStudent() {
   var name = document.getElementById("modal-name").value.trim();
   if (!name) { document.getElementById("modal-name").focus(); return; }
+  var date = document.getElementById("modal-date").value.trim();   // любой формат, без жёстких проверок
 
   var list = getStudents();
   if (editingId) {
-    list = list.map(function(s) { return s.id === editingId ? { id: s.id, name: name } : s; });
+    list = list.map(function(s) { return s.id === editingId ? { id: s.id, name: name, date: date } : s; });
     showToast("Изменено — не забудьте «Опубликовать»");
   } else {
     var newId = list.length > 0 ? Math.max.apply(null, list.map(function(s){ return s.id; })) + 1 : 1;
-    list.push({ id: newId, name: name });
+    list.push({ id: newId, name: name, date: date });
     showToast("Добавлено — не забудьте «Опубликовать»");
   }
 
@@ -641,8 +649,10 @@ function deleteStudent(id) {
 document.getElementById("modal-overlay").addEventListener("click", function(e) {
   if (e.target === this) closeModal();
 });
-document.getElementById("modal-name").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") saveStudent();
+["modal-name", "modal-date"].forEach(function(id) {
+  document.getElementById(id).addEventListener("keydown", function(e) {
+    if (e.key === "Enter") saveStudent();
+  });
 });
 
 /* ---------- тост ---------- */
