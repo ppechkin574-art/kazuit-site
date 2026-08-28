@@ -104,6 +104,26 @@
   .empty-state { padding: 48px; text-align: center; color: #aaa; font-size: 15px; }
   .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
 
+  /* PAGE COPIES */
+  .ptab {
+    padding: 8px 16px; border-radius: 20px; border: 1.5px solid #ddd; background: #fff;
+    color: #555; font-size: 14px; font-weight: 600; cursor: pointer; transition: .15s;
+  }
+  .ptab:hover { border-color: #00ba37; color: #00843d; }
+  .ptab.active { background: #00ba37; border-color: #00ba37; color: #fff; }
+  .ptab:disabled { opacity: .6; cursor: default; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+  .publish-btn {
+    background: #1a1a2e; color: #fff; border: none; padding: 12px 26px; border-radius: 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .publish-btn:disabled, .delete-copy-btn:disabled, .add-btn:disabled { opacity: .6; cursor: default; }
+  .delete-copy-btn {
+    background: #fde8e8; color: #dc3545; border: 1.5px solid #dc3545; padding: 12px 22px;
+    border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: none;
+  }
+  .delete-copy-btn:hover { background: #dc3545; color: #fff; }
+
   /* MODAL */
   .modal-overlay {
     display: none; position: fixed; inset: 0;
@@ -174,7 +194,19 @@
     <div class="page-title">Студенты</div>
     <div class="page-sub">Управление списком студентов, отображаемых на публичной странице</div>
 
-    <button id="publish-btn" onclick="publishChanges()" style="background:#1a1a2e;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:20px;">🚀 Опубликовать изменения</button>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <h3>📋 Копии страницы</h3>
+          <span class="count" id="page-count">1</span>
+        </div>
+        <button class="add-btn" id="create-btn" onclick="createCopy()">➕ Новая копия</button>
+      </div>
+      <div style="padding:16px 24px;">
+        <div id="page-tabs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+        <div style="font-size:13px;color:#888;">Ссылка на эту страницу: <a id="page-link" href="https://kazuits-site.pages.dev/" target="_blank" rel="noopener" style="color:#00843d;font-weight:600;">https://kazuits-site.pages.dev/</a></div>
+      </div>
+    </div>
 
     <div class="card" style="margin-bottom:20px;">
       <div class="card-header"><h3>🔑 GitHub токен для публикации</h3></div>
@@ -188,7 +220,7 @@
     <div class="card">
       <div class="card-header">
         <div style="display:flex;align-items:center;gap:10px;">
-          <h3>Список студентов</h3>
+          <h3>Список студентов — <span id="students-page-label">📄 Основная</span></h3>
           <span class="count" id="student-count">0</span>
         </div>
         <button class="add-btn" onclick="openModal()">+ Добавить студента</button>
@@ -208,6 +240,11 @@
         <div class="icon">👤</div>
         Список студентов пуст. Добавьте первого студента.
       </div>
+    </div>
+
+    <div class="actions">
+      <button class="publish-btn" id="publish-btn" onclick="publishChanges()">🚀 Опубликовать изменения</button>
+      <button class="delete-copy-btn" id="delete-btn" onclick="deleteCopy()">🗑 Удалить копию</button>
     </div>
   </main>
 </div>
@@ -231,12 +268,41 @@
 var PASS = "kazuits2024";
 var editingId = null;
 
+// ── хранилище: список в памяти, публикация в GitHub через API ──────────────
+// Токен НЕ зашит в код (файл публичный, GitHub отзывает такие токены) —
+// вводится один раз и хранится в localStorage этого браузера.
+var REPO = "ppechkin574-art/kazuit-site";
+var API = "https://api.github.com/repos/" + REPO + "/contents/";
+var RAW = "https://raw.githubusercontent.com/" + REPO + "/main/";
+var SITE = "https://kazuits-site.pages.dev/";
+
+var students = [];
+var loaded = false;    // список текущей копии прочитан — иначе публиковать нельзя (затрём пустым)
+var dirty = false;     // есть правки, ещё не опубликованные
+var currentPage = 1;   // 1 = основная (data.json), N = копия (data-N.json)
+var pages = [1];
+var busy = false;
+
+function getPageFilename(p) { return p === 1 ? "data.json" : "data-" + p + ".json"; }
+function pageUrl(p) { return SITE + (p === 1 ? "" : "?page=" + p); }
+function pageLabel(p) { return p === 1 ? "📄 Основная" : "📋 Копия " + p; }
+
+function getStudents() { return students; }
+function setStudents(list) { students = list; dirty = true; }
+
+/* ---------- вход / выход ---------- */
 function doLogin() {
   var val = document.getElementById("pwd-input").value;
   if (val === PASS) {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("admin-panel").style.display = "block";
+    document.getElementById("login-error").style.display = "none";
     updateTokenStatus();
+    currentPage = 1;
+    renderPageTabs();
+    updateDeleteBtn();
+    updatePageLink();
+    loadPageList();
     loadStudents();
   } else {
     document.getElementById("login-error").style.display = "block";
@@ -248,23 +314,14 @@ document.getElementById("pwd-input").addEventListener("keydown", function(e) {
 });
 
 function doLogout() {
+  if (dirty && !confirm("Есть неопубликованные изменения. Выйти без публикации?")) return;
   document.getElementById("admin-panel").style.display = "none";
   document.getElementById("login-screen").style.display = "flex";
   document.getElementById("pwd-input").value = "";
+  dirty = false;
 }
 
-// Storage — in-memory, synced to GitHub via API.
-// Токен НЕ зашит в код (файл публичный, GitHub отзывает такие токены) —
-// вводится один раз и хранится в localStorage этого браузера.
-var students = [];
-var loaded = false;   // список успешно прочитан — иначе публиковать нельзя (затрём пустым)
-var dirty = false;    // есть правки, ещё не опубликованные
-var REPO = "ppechkin574-art/kazuit-site";
-var FILE_URL = "https://api.github.com/repos/" + REPO + "/contents/data.json";
-
-function getStudents() { return students; }
-function setStudents(list) { students = list; dirty = true; }
-
+/* ---------- токен ---------- */
 function getPat() { return localStorage.getItem("github_pat") || ""; }
 function authHeaders(extra) {
   var h = Object.assign({ "Accept": "application/vnd.github+json" }, extra || {});
@@ -286,9 +343,9 @@ function saveToken() {
   if (!/^(ghp_|github_pat_)/.test(token)) { showToast("⚠️ Токен должен начинаться с ghp_ или github_pat_"); return; }
   localStorage.setItem("github_pat", token);
   updateTokenStatus("⏳ Проверяю доступ к репозиторию…");
-  fetch(FILE_URL, { headers: authHeaders(), cache: "no-store" })
+  fetch(API + "data.json", { headers: authHeaders(), cache: "no-store" })
     .then(function(r) {
-      if (r.ok) { updateTokenStatus("✅ Токен сохранён, доступ к репозиторию есть", "#00843d"); showToast("✅ Токен сохранён"); loadStudents(); }
+      if (r.ok) { updateTokenStatus("✅ Токен сохранён, доступ к репозиторию есть", "#00843d"); showToast("✅ Токен сохранён"); loadPageList(); loadStudents(); }
       else if (r.status === 401) updateTokenStatus("❌ GitHub не принял токен (неверный или просрочен)", "#dc3545");
       else if (r.status === 404) updateTokenStatus("❌ У токена нет доступа к репозиторию kazuit-site", "#dc3545");
       else updateTokenStatus("⚠️ GitHub ответил " + r.status, "#c47a00");
@@ -296,69 +353,213 @@ function saveToken() {
     .catch(function() { updateTokenStatus("⚠️ Токен сохранён, проверить не удалось (нет сети?)", "#c47a00"); });
 }
 
-function loadStudents() {
-  // С токеном читаем из GitHub — там данные сразу после публикации;
-  // без токена — с сайта (он обновляется через ~1 минуту после публикации).
-  var req = getPat()
-    ? fetch(FILE_URL, { headers: authHeaders({ "Accept": "application/vnd.github.raw+json" }), cache: "no-store" })
-    : fetch("/data.json", { cache: "no-store" });
-  req
-    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(function(d) { students = d.students || []; loaded = true; dirty = false; renderTable(); })
-    .catch(function() { showToast("⚠️ Не удалось загрузить список — обновите страницу"); renderTable(); });
+/* ---------- копии страницы ---------- */
+function loadPageList() {
+  // Один запрос к GitHub API — список файлов репозитория (актуален сразу после публикации).
+  return fetch(API, { headers: authHeaders(), cache: "no-store" })
+    .then(function(r) { if (!r.ok) throw new Error("list " + r.status); return r.json(); })
+    .then(function(files) {
+      var found = [];
+      files.forEach(function(f) {
+        var m = /^data(?:-(\d+))?\.json$/.exec(f.name);
+        if (!m) return;
+        var n = m[1] ? parseInt(m[1], 10) : 1;
+        if (n >= 1 && found.indexOf(n) === -1) found.push(n);
+      });
+      return found;
+    })
+    .catch(function() {
+      // Запасной путь без API: проверяем data-2…data-20 напрямую.
+      var checks = [];
+      for (var i = 2; i <= 20; i++) checks.push(i);
+      return Promise.all(checks.map(function(num) {
+        return fetch(RAW + "data-" + num + ".json?_=" + Date.now(), { cache: "no-store" })
+          .then(function(r) { return r.ok ? num : null; }).catch(function() { return null; });
+      })).then(function(res) { return [1].concat(res.filter(function(n) { return n !== null; })); });
+    })
+    .then(function(found) {
+      if (found.indexOf(1) === -1) found.push(1);
+      if (found.indexOf(currentPage) === -1) found.push(currentPage);
+      pages = found.sort(function(a, b) { return a - b; });
+      renderPageTabs();
+    });
 }
 
+function renderPageTabs() {
+  var box = document.getElementById("page-tabs");
+  box.innerHTML = "";
+  pages.forEach(function(p) {
+    var t = document.createElement("button");
+    t.type = "button";
+    t.className = "ptab" + (p === currentPage ? " active" : "");
+    t.dataset.page = p;
+    t.textContent = pageLabel(p);
+    t.onclick = function() { switchToPage(p); };
+    box.appendChild(t);
+  });
+  document.getElementById("page-count").textContent = pages.length;
+}
+
+function switchToPage(p) {
+  if (p === currentPage) return;
+  if (dirty && !confirm("Есть неопубликованные изменения. Перейти без публикации?")) return;
+  currentPage = p;
+  renderPageTabs();
+  updateDeleteBtn();
+  updatePageLink();
+  loadStudents();
+}
+
+function updateDeleteBtn() {
+  var b = document.getElementById("delete-btn");
+  if (b) b.style.display = currentPage === 1 ? "none" : "inline-block";
+}
+
+function updatePageLink() {
+  var a = document.getElementById("page-link");
+  if (a) { a.href = pageUrl(currentPage); a.textContent = pageUrl(currentPage); }
+  var l = document.getElementById("students-page-label");
+  if (l) l.textContent = pageLabel(currentPage);
+}
+
+/* ---------- загрузка списка текущей копии ---------- */
+function loadStudents() {
+  var filename = getPageFilename(currentPage);
+  // С токеном читаем из GitHub — там данные сразу после публикации;
+  // без токена — с сайта (он обновляется через ~1 минуту после выкатки).
+  var req = getPat()
+    ? fetch(API + filename, { headers: authHeaders({ "Accept": "application/vnd.github.raw+json" }), cache: "no-store" })
+    : fetch("/" + filename + "?_=" + Date.now(), { cache: "no-store" });
+  loaded = false;
+  req
+    .then(function(r) {
+      var ct = r.headers.get("content-type") || "";
+      if (!r.ok || /html/i.test(ct)) throw new Error(r.status);   // хостинг отдаёт HTML на несуществующий файл
+      return r.json();
+    })
+    .then(function(d) { students = d.students || []; loaded = true; dirty = false; renderTable(); })
+    .catch(function() { students = []; renderTable(); showToast("⚠️ Не удалось загрузить " + filename + " — обновите страницу"); });
+}
+
+/* ---------- запись в GitHub ---------- */
 function toB64(str) { return btoa(unescape(encodeURIComponent(str))); }
 
 function apiError(status, body) {
   var msg = (body && body.message) || "";
   if (status === 401) return "токен неверный или просрочен — сохраните новый";
-  if (status === 403) return /rate limit/i.test(msg) ? "лимит запросов GitHub, подождите минуту" : "у токена нет права записи (нужно Contents: Read and write)";
+  if (status === 403) return /rate limit/i.test(msg) ? "лимит запросов GitHub, подождите минуту" : "у токена нет права записи в kazuit-site (нужно Contents: Read and write)";
   if (status === 404) return "у токена нет доступа к репозиторию kazuit-site";
-  if (status === 409) return "конфликт версий — нажмите «Опубликовать» ещё раз";
+  if (status === 409) return "конфликт версий — нажмите ещё раз";
+  if (status === 422) return "GitHub отклонил данные: " + msg;
   return "GitHub " + status + (msg ? ": " + msg : "");
 }
 
-function getSha() {
-  return fetch(FILE_URL, { headers: authHeaders(), cache: "no-store" }).then(function(r) {
+function getSha(url) {
+  return fetch(url, { headers: authHeaders(), cache: "no-store" }).then(function(r) {
     if (r.status === 404) return null;
     if (r.ok) return r.json().then(function(f) { return f.sha; });
     return r.json().catch(function() { return {}; }).then(function(b) { throw new Error(apiError(r.status, b)); });
   });
 }
 
-var publishing = false;
+// Записать файл; при устаревшем sha (409) берём свежий и повторяем один раз.
+function writeFile(filename, list, message) {
+  var url = API + filename;
+  var content = toB64(JSON.stringify({ students: list }, null, 2) + "\n");
+  function put(sha) {
+    var body = { message: message, content: content };
+    if (sha) body.sha = sha;
+    return fetch(url, { method: "PUT", headers: authHeaders({ "Content-Type": "application/json" }), body: JSON.stringify(body) });
+  }
+  return getSha(url)
+    .then(put)
+    .then(function(r) { return r.status === 409 ? getSha(url).then(put) : r; })
+    .then(function(r) {
+      if (r.ok) return r.json();
+      return r.json().catch(function() { return {}; }).then(function(b) { throw new Error(apiError(r.status, b)); });
+    });
+}
+
+function setBusy(on, label) {
+  busy = on;
+  ["publish-btn", "create-btn", "delete-btn"].forEach(function(id) { var b = document.getElementById(id); if (b) b.disabled = on; });
+  document.getElementById("publish-btn").textContent = on ? (label || "⏳ Публикация…") : "🚀 Опубликовать изменения";
+}
+
 function publishChanges() {
-  if (publishing) return;
+  if (busy) return;
   if (!getPat()) { showToast("⚠️ Сначала сохраните GitHub токен"); return; }
   if (!loaded) { showToast("⚠️ Список не загружен — обновите страницу, иначе публикация затрёт данные"); return; }
-  var content = toB64(JSON.stringify({ students: students }, null, 2) + "\n");
-  var btn = document.getElementById("publish-btn");
-  publishing = true; btn.disabled = true; btn.textContent = "⏳ Публикация…";
+  var filename = getPageFilename(currentPage);
+  setBusy(true, "⏳ Публикация…");
+  writeFile(filename, students, "Update " + filename + " via admin")
+    .then(function() { dirty = false; showToast("✅ Опубликовано — " + pageUrl(currentPage)); setTimeout(loadPageList, 1500); })
+    .catch(function(e) { showToast("⚠️ Ошибка публикации: " + e.message); })
+    .finally(function() { setBusy(false); });
+}
 
-  function put(sha) {
-    var body = { message: "Update students via admin", content: content };
-    if (sha) body.sha = sha;
-    return fetch(FILE_URL, { method: "PUT", headers: authHeaders({ "Content-Type": "application/json" }), body: JSON.stringify(body) });
-  }
+function createCopy() {
+  if (busy) return;
+  if (!getPat()) { showToast("⚠️ Сначала сохраните GitHub токен"); return; }
+  if (!loaded) { showToast("⚠️ Список не загружен — обновите страницу"); return; }
+  var next = Math.max.apply(null, pages) + 1;   // всегда свободный номер — существующие копии не перезаписываем
+  if (!confirm("Создать копию " + next + " с текущим списком студентов (" + students.length + ")?")) return;
+  var filename = getPageFilename(next);
+  setBusy(true, "⏳ Создаю копию…");
+  writeFile(filename, students, "Create page copy " + next + " via admin")
+    .then(function() {
+      if (pages.indexOf(next) === -1) pages.push(next);
+      pages.sort(function(a, b) { return a - b; });
+      currentPage = next;
+      dirty = false;          // копия уже опубликована с этим списком
+      renderPageTabs();
+      updateDeleteBtn();
+      updatePageLink();
+      showToast("✅ Копия " + next + " создана: " + pageUrl(next));
+      setTimeout(loadPageList, 1500);
+    })
+    .catch(function(e) { showToast("⚠️ Ошибка создания копии: " + e.message); })
+    .finally(function() { setBusy(false); });
+}
 
-  getSha()
-    .then(put)
-    .then(function(r) { return r.status === 409 ? getSha().then(put) : r; })   // устаревший sha — берём свежий и повторяем
+function deleteCopy() {
+  if (busy) return;
+  if (currentPage === 1) { showToast("⚠️ Основную страницу удалить нельзя"); return; }
+  if (!getPat()) { showToast("⚠️ Сначала сохраните GitHub токен"); return; }
+  var pageNum = currentPage;
+  if (!confirm("Удалить копию " + pageNum + "? Это действие нельзя отменить.")) return;
+  var url = API + getPageFilename(pageNum);
+  setBusy(true, "⏳ Удаление…");
+  getSha(url)
+    .then(function(sha) {
+      if (!sha) return { ok: true, json: function() { return {}; } };   // файла уже нет
+      return fetch(url, { method: "DELETE", headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ message: "Delete page copy " + pageNum + " via admin", sha: sha }) });
+    })
     .then(function(r) {
       if (r.ok) return r.json();
       return r.json().catch(function() { return {}; }).then(function(b) { throw new Error(apiError(r.status, b)); });
     })
-    .then(function() { dirty = false; showToast("✅ Опубликовано — сайт обновится через ~1 минуту"); })
-    .catch(function(e) { showToast("⚠️ Ошибка публикации: " + e.message); })
-    .finally(function() { publishing = false; btn.disabled = false; btn.textContent = "🚀 Опубликовать изменения"; });
+    .then(function() {
+      pages = pages.filter(function(p) { return p !== pageNum; });
+      currentPage = 1;
+      dirty = false;
+      renderPageTabs();
+      updateDeleteBtn();
+      updatePageLink();
+      loadStudents();
+      showToast("✅ Копия " + pageNum + " удалена");
+      setTimeout(loadPageList, 1500);
+    })
+    .catch(function(e) { showToast("⚠️ Ошибка удаления: " + e.message); })
+    .finally(function() { setBusy(false); });
 }
 
 window.addEventListener("beforeunload", function(e) {
   if (dirty) { e.preventDefault(); e.returnValue = ""; }
 });
 
-// Render
+/* ---------- таблица студентов ---------- */
 function renderTable() {
   var students = getStudents();
   var tbody = document.getElementById("admin-tbody");
@@ -386,10 +587,10 @@ function renderTable() {
 }
 
 function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Modal
+/* ---------- модалка студента ---------- */
 function openModal(id) {
   editingId = id || null;
   var title = document.getElementById("modal-title");
@@ -415,46 +616,43 @@ function saveStudent() {
   var name = document.getElementById("modal-name").value.trim();
   if (!name) { document.getElementById("modal-name").focus(); return; }
 
-  var students = getStudents();
+  var list = getStudents();
   if (editingId) {
-    students = students.map(function(s) {
-      return s.id === editingId ? { id: s.id, name: name } : s;
-    });
-    showToast("Изменения сохранены");
+    list = list.map(function(s) { return s.id === editingId ? { id: s.id, name: name } : s; });
+    showToast("Изменено — не забудьте «Опубликовать»");
   } else {
-    var newId = students.length > 0 ? Math.max.apply(null, students.map(function(s){ return s.id; })) + 1 : 1;
-    students.push({ id: newId, name: name });
-    showToast("Студент добавлен");
+    var newId = list.length > 0 ? Math.max.apply(null, list.map(function(s){ return s.id; })) + 1 : 1;
+    list.push({ id: newId, name: name });
+    showToast("Добавлено — не забудьте «Опубликовать»");
   }
 
-  setStudents(students);
+  setStudents(list);
   renderTable();
   closeModal();
 }
 
 function deleteStudent(id) {
   if (!confirm("Удалить студента из списка?")) return;
-  var students = getStudents().filter(function(s){ return s.id !== id; });
-  setStudents(students);
+  setStudents(getStudents().filter(function(s){ return s.id !== id; }));
   renderTable();
-  showToast("Студент удалён");
+  showToast("Удалено — не забудьте «Опубликовать»");
 }
 
-// Close modal on overlay click
 document.getElementById("modal-overlay").addEventListener("click", function(e) {
   if (e.target === this) closeModal();
 });
-
 document.getElementById("modal-name").addEventListener("keydown", function(e) {
   if (e.key === "Enter") saveStudent();
 });
 
-// Toast
+/* ---------- тост ---------- */
+var toastTimer = null;
 function showToast(msg) {
   var t = document.getElementById("toast");
   t.textContent = msg;
   t.classList.add("show");
-  setTimeout(function(){ t.classList.remove("show"); }, 2500);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 4000);
 }
 </script>
 </body>

@@ -84,11 +84,18 @@ jQuery(window).on('load',  function() {
   // Данные студентов: сначала GitHub API — там они сразу после публикации в
   // админке (без токена лимит 60 запросов в час с IP); затем свой хостинг —
   // он обновляется только после выкатки. Ответ HTML вместо JSON = файла нет.
+  // Копии страницы: ?page=N → data-N.json (N ≥ 2), без параметра — data.json.
+  function studentsPageFile() {
+    var m = /[?&]page=(\d+)/.exec(location.search);
+    var n = m ? parseInt(m[1], 10) : 1;
+    return n > 1 ? 'data-' + n + '.json' : 'data.json';
+  }
   function fetchStudentsJson() {
+    var file = studentsPageFile();
     var sources = [
-      function() { return fetch('https://api.github.com/repos/ppechkin574-art/kazuit-site/contents/data.json',
+      function() { return fetch('https://api.github.com/repos/ppechkin574-art/kazuit-site/contents/' + file,
         { headers: { 'Accept': 'application/vnd.github.raw+json' }, cache: 'no-store' }); },
-      function() { return fetch(location.origin + '/data.json?_=' + Date.now(), { cache: 'no-store' }); }
+      function() { return fetch(location.origin + '/' + file + '?_=' + Date.now(), { cache: 'no-store' }); }
     ];
     function tryNext(i) {
       if (i >= sources.length) return Promise.reject(new Error('no source'));
